@@ -21,7 +21,7 @@ class Bambora extends PaymentModule
 	public function __construct()
 	{
 		$this->name = 'bambora';
-		$this->version = 1.4;
+		$this->version = '1.4.1';
 		$this->author = "Bambora";
 		$this->tab = 'payments_gateways';
 		
@@ -458,9 +458,9 @@ class Bambora extends PaymentModule
     private function merchantErrorMessage($reason)
     {
         $message = "An error occured.";
-        if($reason != "")
+        if(isset($reason))
         {
-            $message .= " Reason: " + $reason;
+            $message .= "<br/>Reason: ". $reason;
         }
         return $message;
         
@@ -512,7 +512,7 @@ class Bambora extends PaymentModule
             $getTransaction_json = json_decode($getTransaction, true);
 
 
-            if($getTransaction_json["meta"]["result"] == false)
+            if(!$getTransaction_json["meta"]["result"])
             {
                 return $this->merchantErrorMessage($getTransaction_json["meta"]["message"]["merchant"]);
             }
@@ -521,7 +521,7 @@ class Bambora extends PaymentModule
 
             $getTransactionOperation_json =  json_decode($getTransactionOperation, true);
 
-            if($getTransactionOperation_json["meta"]["result"] == false)
+            if(!$getTransactionOperation_json["meta"]["result"])
             {
                 return $this->merchantErrorMessage($getTransactionOperation_json["meta"]["message"]["merchant"]);
             }
@@ -957,7 +957,7 @@ class Bambora extends PaymentModule
 
         $json = json_decode($expressRes, true);                
         
-        if ($json['meta']['result'] == false)
+        if (!$json['meta']['result'])
         {        
             $errormessage = $json['meta']['message']['enduser'];
             $this->context->smarty->assign('bambora_errormessage', $errormessage);
@@ -1186,16 +1186,16 @@ class Bambora extends PaymentModule
         {
             $html .= $this->showCheckmark();
         }
-        $html .='<div id="overlay_message_container">';
+        $html .='<div id="bambora_overlay_message_container">';
 
         if(strlen($message) > 0)
         {
-            $html .='<p id="overlay_message_title_with_message">'.$title.'</p>';
-            $html .= '<hr><p id="overlay_message_message">'. $message .'</p>';
+            $html .='<p id="bambora_overlay_message_title_with_message">'.$title.'</p>';
+            $html .= '<hr><p id="bambora_overlay_message_message">'. $message .'</p>';
         }
         else
         {
-            $html .='<p id="overlay_message_title">'.$title.'</p>';
+            $html .='<p id="bambora_overlay_message_title">'.$title.'</p>';
         }
         
         $html .= '</div></div></div></div>';
@@ -1204,21 +1204,30 @@ class Bambora extends PaymentModule
     }
 
     function showCheckmark(){
-        $html = '<span class="bambora-checkmark">
-                    <div class="bambora-circle bambora-checkmark_circle">
+        //$html = '<span class="bambora-checkmark">
+        //            <div class="bambora-circle bambora-checkmark_circle">
+        //                <div class="bambora-checkmark_stem"></div>
+        //            </div>
+        //        </span>';
+        //return $html;
+        $html = '<div class="bambora-circle bambora-checkmark_circle">
                         <div class="bambora-checkmark_stem"></div>
-                    </div>
-                </span>';
+                    </div>';
         return $html;
     }
 
     function showExclamation(){
-        $html = '<span class="bambora-exclamation">
-                    <div class="bambora-circle bambora-exclamation_circle">
+        //$html = '<span class="bambora-exclamation">
+        //            <div class="bambora-circle bambora-exclamation_circle">
+        //                <div class="bambora-exclamation_stem"></div>
+        //                <div class="bambora-exclamation_dot"></div>
+        //            </div>
+        //        </span>';
+        //return $html;
+        $html = '<div class="bambora-circle bambora-exclamation_circle">
                         <div class="bambora-exclamation_stem"></div>
                         <div class="bambora-exclamation_dot"></div>
-                    </div>
-                </span>';
+                    </div>';
         return $html;
     }
 

@@ -13,7 +13,7 @@
             "hideOnContentClick": false,
             "hideOnOverlayClick": false,
             "helpers" : { 
-            "overlay" : {"closeClick": true} // prevents closing when clicking OUTSIDE fancybox
+            "overlay" : {"closeClick": true}
             }
 
         });
