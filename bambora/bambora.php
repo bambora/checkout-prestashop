@@ -212,7 +212,7 @@ class Bambora extends PaymentModule
 	        else
 	        {
 				Configuration::updateValue('BAMBORA_MERCHANTNUMBER', Tools::getValue("BAMBORA_MERCHANTNUMBER"));				
-				Configuration::updateValue('BAMBORA_WINDOWID', Tools::getValue("BAMBORA_WINDOWID"));
+				Configuration::updateValue('BAMBORA_PAYMENTWINDOWID', Tools::getValue("BAMBORA_PAYMENTWINDOWID"));
 				Configuration::updateValue('BAMBORA_ENABLE_REMOTE_API', Tools::getValue("BAMBORA_ENABLE_REMOTE_API"));
 				Configuration::updateValue('BAMBORA_INSTANTCAPTURE', Tools::getValue("BAMBORA_INSTANTCAPTURE"));	
                 Configuration::updateValue('BAMBORA_MD5KEY', Tools::getValue("BAMBORA_MD5KEY"));
@@ -291,8 +291,8 @@ class Bambora extends PaymentModule
                 ),
                 array(
                     'type' => 'text',
-                    'label' => $this->l('Window ID'),
-                    'name' => 'BAMBORA_WINDOWID',
+                    'label' => $this->l('Payment Window ID'),
+                    'name' => 'BAMBORA_PAYMENTWINDOWID',
                     'size' => 40,
                     'required' => false
                 ),	
@@ -378,7 +378,7 @@ class Bambora extends PaymentModule
         // Load current value
         $helper->fields_value['BAMBORA_MERCHANTNUMBER'] = Configuration::get('BAMBORA_MERCHANTNUMBER');
         $helper->fields_value['BAMBORA_WINDOWSTATE'] = Configuration::get('BAMBORA_WINDOWSTATE');
-        $helper->fields_value['BAMBORA_WINDOWID'] = Configuration::get('BAMBORA_WINDOWID');
+        $helper->fields_value['BAMBORA_PAYMENTWINDOWID'] = Configuration::get('BAMBORA_PAYMENTWINDOWID');
         $helper->fields_value['BAMBORA_ENABLE_REMOTE_API'] = Configuration::get('BAMBORA_ENABLE_REMOTE_API');
         $helper->fields_value['BAMBORA_INSTANTCAPTURE'] = Configuration::get('BAMBORA_INSTANTCAPTURE');     
         $helper->fields_value['BAMBORA_MD5KEY'] = Configuration::get('BAMBORA_MD5KEY');
@@ -429,7 +429,7 @@ class Bambora extends PaymentModule
                         <p>'.$this->l('Get your Secret token from the').' <a href="https://admin.epay.eu/" target="_blank">'.$this->l('Bambora Administration').'</a> '.$this->l('via Settings > API users. The secret token is only displayed once when an API user is created! Please save this token in a safe place as Bambora will not be able to recover it.').'
                         <br/> <b>'.$this->l('Note').': </b> '.$this->l('This field is mandatory in order to enable payments').'</p>
                         <br/> 
-                        <H5>'.$this->l('Window ID').'</H5>
+                        <H5>'.$this->l('Payment Window ID').'</H5>
                         <p>'.$this->l('Choose which payment window to use. You can create multiple payment windows in the').' <a href="https://admin.epay.eu/" target="_blank">'.$this->l('Bambora Administration').'</a> '.$this->l(' via Settings > Payment windows. /n 
                             This is useful if you want to show different layouts, payment types or transaction fees for various customers').'</p>
                         <br/> 
@@ -950,6 +950,7 @@ class Bambora extends PaymentModule
         $request -> language = str_replace("_","-",$this->context->language->language_code);
         $request -> order = $bamboraOrder;
         $request -> url = $bamboraUrl;
+        $request->paymentwindowid = Configuration::get('BAMBORA_PAYMENTWINDOWID');
         $apiKey = strval(Configuration::get('BAMBORA_REMOTE_API_PASSWORD'));
         $api = new BamboraApi($apiKey);
 
