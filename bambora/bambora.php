@@ -21,7 +21,7 @@ class Bambora extends PaymentModule
 	public function __construct()
 	{
 		$this->name = 'bambora';
-		$this->version = '1.4.2';
+		$this->version = '1.4.3';
 		$this->author = "Bambora";
 		$this->tab = 'payments_gateways';
 
