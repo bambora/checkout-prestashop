@@ -10,7 +10,7 @@ class BamboraOrder
     public $billingaddress; //BanboraAddress
     public $currency;
     public $lines;
-    public $ordernumbe;
+    public $ordernumber;
     public $shippingaddress;        
     public $total;
     public $vatamount;
@@ -36,9 +36,6 @@ class BamboraOrderLine
     public $totalpriceinclvat;
     public $totalpricevatamount;
     public $unit; 
-    public $unitprice;
-    public $unitpriceinclvat;
-    public $unitpricevatamount;
     public $vat;
 }
 class BamboraUrl

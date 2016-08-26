@@ -38,8 +38,8 @@
         {if $bambora_psVersionIsnewerOrEqualTo160 == false }
         <img src="{$this_path_bambora}Bambora_1_MINI_RGB.png" alt="{l s='Pay using Bambora' mod='bambora'}" style="float:left; margin-left:-10px; margin-top:-16px" />
         {/if}
-        <span>an issue occured.</span>
-        <span>reason: {$bambora_errormessage}</span>        
+        <span>An issue occured: </span>
+        <span>{$bambora_errormessage}</span>        
       </a>
     </p>
   </div>
