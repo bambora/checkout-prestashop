@@ -23,7 +23,7 @@
   <p class="payment_module">
     <a title="{l s='Pay using Bambora' mod='bambora'}" href="javascript:openPaymentWindow('{$bambora_checkouturl|escape:'htmlall':'UTF-8'}')" class="bambora_payment_content">
       {if $bambora_psVersionIsnewerOrEqualTo160 == false }
-		<img src="{$bambora_path}Bambora_1_MINI_RGB.png" alt="{l s='Pay using Bambora' mod='bambora'}" style="float:left; margin-left:-10px; margin-top:-16px" />
+		<img src="https://d3r1pwhfz7unl9.cloudfront.net/bambora/bambora_mini_rgb.png" alt="{l s='Pay using Bambora' mod='bambora'}" style="float:left; margin-left:-10px; margin-top:-16px" />
       {/if}
       <span id="bambora_card_logos" style="margin-left:20px">
         {if $paymentcardIds|@count gt 0}

@@ -7,7 +7,7 @@ class BamboraCustomer
 }
 class BamboraOrder
 {
-    public $billingaddress; //BanboraAddress
+    public $billingaddress; 
     public $currency;
     public $lines;
     public $ordernumber;
@@ -28,7 +28,7 @@ class BamboraAddress
 class BamboraOrderLine
 {
     public $description;
-    public $id; //sku
+    public $id;
     public $linenumber;
     public $quantity;
     public $text;
@@ -57,11 +57,10 @@ class BamboraUiMessage
 class BamboraCheckoutRequest
 {
     public $capturemulti;
-    public $customer; //BamboraCustommer
+    public $customer; 
     public $instantcaptureamount;
     public $language;
-    public $order; //bamboraOrder 
-    public $url; //bamboraUrl
+    public $order; 
+    public $url;
     public $paymentwindowid;
 }
-?>

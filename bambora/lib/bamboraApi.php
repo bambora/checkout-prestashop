@@ -89,43 +89,32 @@ class BamboraApi
 	{                  
         $serviceUrl = BamboraendpointConfig::getTransactionEndpoint().'/transactions/'.  sprintf('%.0F',$transactionid) . '/delete';             
         
-        $data = array();
-        $jsonData = json_encode($data);
-        
-        $result = $this->_callRestService($serviceUrl, $jsonData, "POST");
+        $result = $this->_callRestService($serviceUrl, null, "POST");
         return $result;    
     }
 
-    public function getTransactionInformation($transactionid)
+    public function gettransaction($transactionid)
 	{ 
         $serviceUrl = BamboraendpointConfig::getMerchantEndpoint().'/transactions/'. sprintf('%.0F',$transactionid);                         
-
-        $data = array();    
-        $jsonData = json_encode($data);
         
-        $result = $this->_callRestService($serviceUrl, $jsonData, "GET");
-        return $result;    
+        $result = $this->_callRestService($serviceUrl, null, "GET");
+        return json_decode($result,true);    
 	}
     
-    public function getTransactionOperations($transactionid)
+    public function gettransactionoperations($transactionid)
     {           
         $serviceUrl = BamboraendpointConfig::getMerchantEndpoint().'/transactions/'. sprintf('%.0F',$transactionid) .'/transactionoperations';             
 
-        $data = array();    
-        $jsonData = json_encode($data);
-        
-        $result = $this->_callRestService($serviceUrl, $jsonData, "GET");
-        return $result;    
+        $result = $this->_callRestService($serviceUrl, null, "GET");
+        return json_decode($result,true);    
     }
 
     public function getPaymentTypes($currency, $amount)
     {   
         $serviceUrl = BamboraendpointConfig::getMerchantEndpoint().'/paymenttypes?currency='. $currency .'&amount='.$amount;
-        $data = array();
+
         
-        $jsonData = json_encode($data);
-        
-        $result = $this->_callRestService($serviceUrl, $jsonData, "GET");
+        $result = $this->_callRestService($serviceUrl, null, "GET");
         return $result;        
     }
 
@@ -159,13 +148,11 @@ class BamboraApi
 
     private function _callRestService($serviceUrl,  $jsonData, $postOrGet)
     {    
-      //  $auth =  strval(Configuration::get('BAMBORA_REMOTE_API_PASSWORD'));
-
         $headers = array(
             'Content-Type: application/json',
             'Content-Length: '.strlen(@$jsonData),
             'Accept: application/json',
-            'Authorization: '.$this->apiKey,//$auth,
+            'Authorization: '.$this->apiKey,
         );
         
         $curl = curl_init();
@@ -181,5 +168,3 @@ class BamboraApi
         return $result;        
     }
 }
-
-?>

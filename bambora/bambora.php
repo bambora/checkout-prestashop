@@ -17,12 +17,15 @@ class Bambora extends PaymentModule
 	private $_html = '';
 	private $_postErrors = array();
 
+    const MODULE_NAME = 'bambora';
+    const MODULE_VERSION = '1.4.3';
+    const MODULE_AUTHOR = 'Bambora';
 
 	public function __construct()
 	{
-		$this->name = 'bambora';
-		$this->version = '1.4.3';
-		$this->author = "Bambora";
+		$this->name = $this::MODULE_NAME;
+		$this->version = $this::MODULE_VERSION;
+		$this->author = $this::MODULE_AUTHOR;
 		$this->tab = 'payments_gateways';
 
 		$this->currencies = true;
@@ -81,7 +84,7 @@ class Bambora extends PaymentModule
     }
     public function hookDisplayBackOfficeHeader($params){
         $this->hookBackOfficeHeader($params);
-		$this -> BamboraUiMessage = $this->procesRemote($params);
+		$this->BamboraUiMessage = $this->procesRemote($params);
         return "";
     }
 
@@ -152,9 +155,6 @@ class Bambora extends PaymentModule
 
 	public function recordTransaction($id_order, $id_cart = 0, $transaction_id = 0, $card_id = 0,  $currency = 0, $amount = 0, $transfee = 0, $bambora_order_id=0 )
 	{
-		if($id_cart)
-			$id_order = Order::getOrderByCartId($id_cart);
-
 		if(!$id_order)
 			$id_order = 0;
 
@@ -508,26 +508,22 @@ class Bambora extends PaymentModule
             $apiKey = strval(Configuration::get('BAMBORA_REMOTE_API_PASSWORD'));
             $api = new BamboraApi($apiKey);
 
-			$getTransaction = $api->getTransactionInformation($transaction["bambora_transaction_id"]);
-            $getTransaction_json = json_decode($getTransaction, true);
+			$getTransaction = $api->gettransaction($transaction["bambora_transaction_id"]);
 
-
-            if(!$getTransaction_json["meta"]["result"])
+            if(!$getTransaction["meta"]["result"])
             {
-                return $this->merchantErrorMessage($getTransaction_json["meta"]["message"]["merchant"]);
+                return $this->merchantErrorMessage($getTransaction["meta"]["message"]["merchant"]);
             }
 
-            $getTransactionOperation = $api-> getTransactionOperations($transaction["bambora_transaction_id"]);
+            $getTransactionOperation = $api->gettransactionoperations($transaction["bambora_transaction_id"]);
 
-            $getTransactionOperation_json =  json_decode($getTransactionOperation, true);
-
-            if(!$getTransactionOperation_json["meta"]["result"])
+            if(!$getTransactionOperation["meta"]["result"])
             {
-                return $this->merchantErrorMessage($getTransactionOperation_json["meta"]["message"]["merchant"]);
+                return $this->merchantErrorMessage($getTransactionOperation["meta"]["message"]["merchant"]);
             }
 
-            $transactionInfo = $getTransaction_json["transaction"];
-            $transactionOperations = $getTransactionOperation_json["transactionoperations"];
+            $transactionInfo = $getTransaction["transaction"];
+            $transactionOperations = $getTransactionOperation["transactionoperations"];
 
 
             $lastAction = $transactionOperations[0]["action"];
@@ -768,7 +764,7 @@ class Bambora extends PaymentModule
     private function buildLogodiv($makeAslinkToAdminSite = false)
     {
         $html = '<a href="http://admin.epay.eu/Account/Login" alt="" title="' . $this->l('Go to Bambora Merchant') . '" target="_blank">';
-        $html .= '<img class="bambora_logo" src="../modules/' . $this->name . '/img/bambora_1_BLACK_300px.png" />';
+        $html .= '<img class="bambora_logo" src="https://d3r1pwhfz7unl9.cloudfront.net/bambora/bambora_black_300px.png" />';
         $html .= '</a>';
         $html .= '<div><a href="http://admin.epay.eu/Account/Login"  alt="" title="' . $this->l('Go to Bambora Merchant') . '" target="_blank">' .$this->l('Go to Bambora Merchant') .'</a></div>';
 
@@ -880,7 +876,7 @@ class Bambora extends PaymentModule
 
 	private function displayTransactionForm($params, $order)
 	{
-        $transactions = $this ->getTransaction(intval($params["id_order"]));
+        $transactions = $this->getStoredTransaction(intval($params["id_order"]));
 
         $return = $this-> buildBamboraContainerStartTag();
 
@@ -1080,16 +1076,11 @@ class Bambora extends PaymentModule
             $line->totalpriceinclvat = BamboraCurrency::convertPriceToMinorUnits($product["total_wt"],$minorUnits);
             $line->totalpricevatamount = BamboraCurrency::convertPriceToMinorUnits($product["total_wt"] - $product["total"],$minorUnits);
             $line->unit = $this->l("pcs.");
-            //$line->unitprice = BamboraCurrency::convertPriceToMinorUnits($product["price"],$minorUnits);
-            //$line->unitpriceinclvat = BamboraCurrency::convertPriceToMinorUnits($product["price_wt"],$minorUnits);
-            //$line->unitpricevatamount = BamboraCurrency::convertPriceToMinorUnits($product["price_wt"] - $product["price"],$minorUnits);
             $line->vat = $product["rate"];
 
             $bamboraOrderlines[] = $line;
             $lineNumber++;
         }
-
-
 
         //Add shipping as an orderline
         $shippingCostWithTax = $this->context->cart->getTotalShippingCost(null,true,null);
@@ -1109,9 +1100,6 @@ class Bambora extends PaymentModule
             $shippingOrderline->vat = round( $shippingTax / $shippingCostWithoutTax * 100);
             $bamboraOrderlines[] = $shippingOrderline;
         }
-
-
-
         return $bamboraOrderlines;
     }
 
@@ -1123,15 +1111,15 @@ class Bambora extends PaymentModule
     private function create_bambora_url($orderId,$currency,$amount)
     {
         $bamboraUrl = new BamboraUrl();
-        $bamboraUrl->accept = $this->context->link->getModuleLink('bambora', 'validation', array(), true).'&orderid='.$orderId.'&currency='.$currency.'&amount='.$amount;
-        $bamboraUrl->decline = $this->context->link->getPageLink('order', true, NULL, "step=3") .'&orderid='.$orderId;
+        $bamboraUrl->accept = $this->context->link->getModuleLink('bambora', 'validation', array(), true);
+        $bamboraUrl->decline = $this->context->link->getPageLink('order', true, null, "step=3");
 
 		$bamboraUrl->callbacks = array();
 		$callback = new BamboraCallback();
-		$callback->url = $this->context->link->getModuleLink('bambora', 'validation', array('callback' => 1), true).'&orderid='.$orderId.'&currency='.$currency.'&amount='.$amount;
+		$callback->url = $this->context->link->getModuleLink('bambora', 'validation', array('callback' => 1), true);
         $bamboraUrl->callbacks[] = $callback;
 
-        $bamboraUrl->immediateredirecttoaccept = Configuration::get('BAMBORA_IMMEDIATEREDIRECTTOACCEPT');
+        $bamboraUrl->immediateredirecttoaccept = Configuration::get('BAMBORA_IMMEDIATEREDIRECTTOACCEPT') ? 1 : 0;
 
         return $bamboraUrl;
     }
@@ -1248,7 +1236,7 @@ class Bambora extends PaymentModule
         return $html;
     }
 
-    private function getTransaction($id_order)
+    private function getStoredTransaction($id_order)
     {
         $transactions = Db::getInstance()->executeS('
 		SELECT o.`id_order`, o.`module`, e.`id_cart`, e.`bambora_transaction_id`,
@@ -1264,7 +1252,7 @@ class Bambora extends PaymentModule
     //works!!!!
     public function hookDisplayPDFInvoice($params){
 
-        $transaction = $this ->getTransaction($params["object"]->id_order);
+        $transaction = $this->getStoredTransaction($params["object"]->id_order);
 
         $transactionid = $transaction[0]["bambora_transaction_id"];
         if ($transactionid == null)
@@ -1274,7 +1262,7 @@ class Bambora extends PaymentModule
 
         $apiKey = strval(Configuration::get('BAMBORA_REMOTE_API_PASSWORD'));
         $api = new BamboraApi($apiKey);
-        $trans = $api->gettransactionInformation($transactionid);
+        $trans = $api->gettransaction($transactionid);
 
         $transMeta = $api->convertJSonResultToArray($trans, "meta");
         $transInfo = $api->convertJSonResultToArray($trans, "transaction");
@@ -1316,17 +1304,14 @@ class Bambora extends PaymentModule
     	$apiKey = strval(Configuration::get('BAMBORA_REMOTE_API_PASSWORD'));
         $api = new BamboraApi($apiKey);
 
-	    $getTransaction = $api->gettransactionInformation($bambora_transaction_id);
+	    $transaction = $api->gettransaction($bambora_transaction_id);
 
-        $getTransaction_json = json_decode($getTransaction, true);
-
-
-        if($getTransaction_json["meta"]["result"] == false)
+        if($transaction["meta"]["result"] == false)
         {
-            return $this->merchantErrorMessage($getTransaction_json["meta"]["message"]["merchant"]);
+            return $this->merchantErrorMessage($transaction["meta"]["message"]["merchant"]);
         }
 
-        $transinfo = $getTransaction_json["transaction"];
+        $transinfo = $transaction["transaction"];
 
         $returnArr["transinfo"] = $transinfo;
 
@@ -1461,8 +1446,6 @@ class Bambora extends PaymentModule
         $order->update();
     }
 
-
-
     function buildSpinner(){
         $html = '<div id="bamboraSpinner" class="bamboraButtonFrame bamboraButtonFrameIncreesedsize row"><div class="col-lg-10">'.$this->l("processing").'... </div><div class="col-lg-2"><div class="bambora-spinner"><img src="'.$this->_path.'img/arrows.svg" class="bambora-spinner"></div></div></div>';
         return $html;
@@ -1473,8 +1456,4 @@ class Bambora extends PaymentModule
         $alert = '<script type="text/javascript">alert("'.$message .'");</script>';
         echo $alert;
     }
-
-
 }
-
-?>

@@ -4,9 +4,9 @@
     background: url(../../logo.png) 15px 12px no-repeat $base-box-bg;
     background-color:#FBFBFB;
     }
-    
+
     p.payment_module a.BamboraStyle{
-    background: url("{$this_path_bambora}Bambora_1_MINI_RGB.png");
+    background: url("https://d3r1pwhfz7unl9.cloudfront.net/bambora/bambora_mini_rgb.png");
     backgroud-attachment: scroll;
     background-repeat: no-repeat;
     background-position-x:0px;
@@ -20,7 +20,7 @@
     /*media all*/
     p.payment_module a.BamboraStyle::after {
     display: block;
-    content: "\f054"; 
+    content: "\f054";
     position: absolute;
     right: 15px;
     margin-top: -11px;
@@ -36,7 +36,7 @@
     <p class="payment_module">
       <a title="{l s='Pay using Bambora' mod='bambora'}" class="bambora bamborastyle">
         {if $bambora_psVersionIsnewerOrEqualTo160 == false }
-        <img src="{$this_path_bambora}Bambora_1_MINI_RGB.png" alt="{l s='Pay using Bambora' mod='bambora'}" style="float:left; margin-left:-10px; margin-top:-16px" />
+        <img src="https://d3r1pwhfz7unl9.cloudfront.net/bambora/bambora_mini_rgb.png" alt="{l s='Pay using Bambora' mod='bambora'}" style="float:left; margin-left:-10px; margin-top:-16px" />
         {/if}
         <span>An issue occured: </span>
         <span>{$bambora_errormessage}</span>        
