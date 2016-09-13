@@ -18,7 +18,7 @@ class Bambora extends PaymentModule
 	private $_postErrors = array();
 
     const MODULE_NAME = 'bambora';
-    const MODULE_VERSION = '1.4.3';
+    const MODULE_VERSION = '1.4.4';
     const MODULE_AUTHOR = 'Bambora';
 
 	public function __construct()
