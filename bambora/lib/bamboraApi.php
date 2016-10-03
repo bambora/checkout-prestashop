@@ -128,15 +128,12 @@ class BamboraApi
         if ($availablePaymentTypesResjson['meta']['result'] == true)
         {
             foreach($availablePaymentTypesResjson['paymentcollections'] as $payment )
-            {
-                if ($payment['name'] == 'paymentcard')
-                {                    
-                    foreach($payment['paymentgroups'] as $card)
-                    {                         
-                        //enshure unique id:
-                        $cardname = $card['id'];
-                        $res[$cardname] = $card['id'];              
-                    }
+            {                  
+                foreach($payment['paymentgroups'] as $card)
+                {                         
+                    //enshure unique id:
+                    $cardname = $card['id'];
+                    $res[$cardname] = $card['id'];              
                 }
             }
 
