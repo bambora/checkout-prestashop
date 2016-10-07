@@ -150,6 +150,7 @@ class BamboraApi
             'Content-Length: '.strlen(@$jsonData),
             'Accept: application/json',
             'Authorization: '.$this->apiKey,
+            'X-EPay-System: ' . $this->getModuleHeaderInfo()
         );
         
         $curl = curl_init();
@@ -163,5 +164,14 @@ class BamboraApi
         
         $result = curl_exec($curl);
         return $result;        
+    }
+
+    private function getModuleHeaderInfo() 
+    {
+        $bamboraVersion = Bambora::MODULE_VERSION;
+        $prestashopVersion = _PS_VERSION_;
+        $result = 'Magento/' . $prestashopVersion . ' Module/' . $bamboraVersion;
+        return $result;
+
     }
 }
