@@ -170,7 +170,7 @@ class BamboraApi
     {
         $bamboraVersion = Bambora::MODULE_VERSION;
         $prestashopVersion = _PS_VERSION_;
-        $result = 'Magento/' . $prestashopVersion . ' Module/' . $bamboraVersion;
+        $result = 'PrestaShop/' . $prestashopVersion . ' Module/' . $bamboraVersion;
         return $result;
 
     }
