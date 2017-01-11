@@ -1,13 +1,22 @@
 <?php
-/*
- * Copyright (c) 2016. All rights reserved Bambora - www.bambora.com
- * This program is free software. You are allowed to use the software but NOT allowed to modify the software.
- * It is also not legal to do any changes to the software and distribute it in your own name / brand.
+/**
+ * 888                             888
+ * 888                             888
+ * 88888b.   8888b.  88888b.d88b.  88888b.   .d88b.  888d888  8888b.
+ * 888 "88b     "88b 888 "888 "88b 888 "88b d88""88b 888P"       "88b
+ * 888  888 .d888888 888  888  888 888  888 888  888 888     .d888888
+ * 888 d88P 888  888 888  888  888 888 d88P Y88..88P 888     888  888
+ * 88888P"  "Y888888 888  888  888 88888P"   "Y88P"  888     "Y888888
+ *
+ * @category    Online Payment Gatway
+ * @package     Bambora_Online
+ * @author      Bambora Online
+ * @copyright   Bambora (http://bambora.com)
  */
+
 include('lib/bamboraApi.php');
 include('lib/bamboraHelpers.php');
 include('lib/bamboraCurrency.php');
-
 
 if (!defined('_PS_VERSION_'))
 	exit;
@@ -16,218 +25,154 @@ class Bambora extends PaymentModule
 {
 	private $_html = '';
 	private $_postErrors = array();
+    private $_apiKey;
 
     const MODULE_NAME = 'bambora';
-    const MODULE_VERSION = '1.4.4';
+    const MODULE_VERSION = '1.5.0';
     const MODULE_AUTHOR = 'Bambora';
+
+    const V15 = '15';
+    const V16 = '16';
+    const V17 = '17';
 
 	public function __construct()
 	{
 		$this->name = $this::MODULE_NAME;
-		$this->version = $this::MODULE_VERSION;
-		$this->author = $this::MODULE_AUTHOR;
 		$this->tab = 'payments_gateways';
+        $this->version = $this::MODULE_VERSION;
+		$this->author = $this::MODULE_AUTHOR;
+
+        $this->ps_versions_compliancy = array('min' => '1.5', 'max' => _PS_VERSION_);
+        $this->controllers = array('accept', 'callback', 'payment');
+        $this->is_eu_compatible = 1;
+        $this->bootstrap = true;
 
 		$this->currencies = true;
 		$this->currencies_mode = 'checkbox';
 
 		parent::__construct();
 
-		if(Configuration::get('BAMBORA_ENABLE_REMOTE_API') == 1 && strlen(Configuration::get('BAMBORA_REMOTE_API_PASSWORD')) <= 0)
-			$this->warning = $this->l('You must set Remote API password to use payment requests. Remember to set the password in the Bambora administration under the menu API / Webservices > Access.');
-
 		$this->displayName = 'Bambora Checkout';
-		$this->description = $this->l('Accept payments for your products online');
+		$this->description = $this->l('Use Bambora Checkout payment gateway to accept payments for your products online');
 	}
 
+    #region Install and Setup
+	/**
+     * Install
+     *
+     * @return boolean
+     */
 	public function install()
 	{
-
         if(!parent::install()
-            OR !Configuration::updateValue('BAMBORA_GOOGLE_PAGEVIEW', '0')
-            OR !Configuration::updateValue('BAMBORA_INTEGRATION', '1')
-            OR !$this->registerHook('payment')
-            OR !$this->registerHook('rightColumn')
-            OR !$this->registerHook('adminOrder')
-            OR !$this->registerHook('paymentReturn')
-            OR !$this->registerHook('updateProduct')
-            OR !$this->registerHook('PDFInvoice')
-            OR !$this->registerHook('Invoice')
-            OR !$this->registerHook('backOfficeHeader')
-			OR !$this->registerHook('displayHeader')
-            OR !$this->registerHook('displayBackOfficeHeader')
+            || !$this->registerHook('payment')
+            || !$this->registerHook('rightColumn')
+            || !$this->registerHook('adminOrder')
+            || !$this->registerHook('paymentReturn')
+            || !$this->registerHook('PDFInvoice')
+            || !$this->registerHook('Invoice')
+            || !$this->registerHook('backOfficeHeader')
+            || !$this->registerHook('displayHeader')
+            || !$this->registerHook('displayBackOfficeHeader')
         )
-			return false;
-
-		if(!$this->createBamboraTransactionTable())
-			return false;
+        {
+            return false;
+        }
+        if($this->getPsVersion() === $this::V17)
+        {
+            if(!$this->registerHook('paymentOptions'))
+            {
+                return false;
+            }
+        }
 
 		return true;
 	}
 
+	/**
+     * Uninstall
+     *
+     * @return boolean
+     */
 	public function uninstall()
 	{
 		return parent::uninstall();
 	}
 
-
+	/**
+     * Hook Display Header
+     */
 	public function hookDisplayHeader()
 	{
         if ($this->context->controller != null)
 		{
-			$this->context->controller->addCSS($this->_path.'css/bamboraStyle.css', 'all');
+			$this->context->controller->addCSS($this->_path.'css/bamboraFront.css', 'all');
 		}
 	}
-    public function hookBackOfficeHeader($params) {
-        $this->context->controller->addCSS($this->_path.'css/bamboraStyle.css', 'all');
 
-    }
-    public function hookDisplayBackOfficeHeader($params){
-        $this->hookBackOfficeHeader($params);
-		$this->BamboraUiMessage = $this->procesRemote($params);
-        return "";
-    }
-
-
-	private function createBamboraTransactionTable()
-	{
-		$table_name = _DB_PREFIX_ . 'bambora_transactions';
-
-		$columns = array
-		(
-			'id_order' => 'int(10) unsigned NOT NULL',
-			'id_cart' => 'int(10) unsigned NOT NULL',
-			'bambora_transaction_id' => 'bigint(20) unsigned NOT NULL',
-			'bambora_orderid' => 'varchar(20) NOT NULL',
-			'card_type' => 'int(4) unsigned NOT NULL DEFAULT 1',
-			'currency' => 'varchar(4) NOT NULL',
-			'amount' => 'int(10) unsigned NOT NULL',
-			'amount_captured' => 'int(10) unsigned NOT NULL DEFAULT 0',
-			'amount_credited' => 'int(10) unsigned NOT NULL DEFAULT 0',
-			'transfee' => 'int(10) unsigned NOT NULL DEFAULT 0',
-			'captured' => 'tinyint(1) NOT NULL DEFAULT 0',
-			'credited' => 'tinyint(1) NOT NULL DEFAULT 0',
-			'deleted' => 'tinyint(1) NOT NULL DEFAULT 0',
-			'date_add' => 'datetime NOT NULL'
-		);
-
-		$query = 'CREATE TABLE IF NOT EXISTS `' . $table_name . '` (';
-
-		foreach ($columns as $column_name => $options)
+    /**
+     * Hook BackOffice Header
+     *
+     * @param mixed $params
+     */
+    public function hookBackOfficeHeader($params)
+    {
+        if ($this->context->controller != null)
 		{
-			$query .= '`' . $column_name . '` ' . $options . ', ';
-		}
-
-		$query .= ' PRIMARY KEY (`bambora_transaction_id`) )';
-
-		if(!Db::getInstance()->Execute($query))
-			return false;
-
-		$i = 0;
-		$previous_column = '';
-		$query = ' ALTER TABLE `' . $table_name . '` ';
-
-		//Check the database fields
-		foreach ($columns as $column_name => $options)
-		{
-			if(!$this->mysqlColumnExists($table_name, $column_name))
-			{
-				$query .= ($i > 0 ? ', ' : '') . 'ADD `' . $column_name . '` ' . $options . ($previous_column != '' ? ' AFTER `' . $previous_column . '`' : ' FIRST');
-				$i++;
-			}
-			$previous_column = $column_name;
-		}
-
-		if($i > 0)
-			if(!Db::getInstance()->Execute($query))
-				return false;
-
-		return true;
-	}
-
-
-	private static function mysqlColumnExists($table_name, $column_name, $link = false)
-	{
-		$result = Db::getInstance()->executeS("SHOW COLUMNS FROM ".$table_name. " LIKE ".$column_name, $link);
-
-		return (count($result) > 0);
-	}
-
-	public function recordTransaction($id_order, $id_cart = 0, $transaction_id = 0, $card_id = 0,  $currency = 0, $amount = 0, $transfee = 0, $bambora_order_id=0 )
-	{
-		if(!$id_order)
-			$id_order = 0;
-
-		$captured = (Configuration::get('BAMBORA_INSTANTCAPTURE') ? 1 : 0);
-
-		/* Add transaction id to the order */
-		$query = 'INSERT INTO ' . _DB_PREFIX_ . 'bambora_transactions
-				(id_order, id_cart, bambora_transaction_id, bambora_orderid, card_type, currency, amount, transfee, captured, date_add)
-				VALUES
-				(' . $id_order . ', ' . $id_cart . ', ' . $transaction_id. ', '. $bambora_order_id . ', ' . $card_id . ',  \'' . $currency . '\', ' . $amount . ', ' . $transfee . ', ' . $captured  .', NOW())';
-
-		if(!Db::getInstance()->Execute($query))
-			return false;
-
-		return true;
-	}
-
-	private function setCaptured($transaction_id, $amount)
-	{
-		$query = ' UPDATE ' . _DB_PREFIX_ . 'bambora_transactions SET `captured` = 1, `amount` = ' . $amount . ' WHERE `bambora_transaction_id` = ' . $transaction_id;
-		if(!Db::getInstance()->Execute($query))
-			return false;
-		return true;
-	}
-
-	private function setCredited($transaction_id, $amount)
-	{
-        if ($amount < 0)
-        {
-            $amount = $amount *-1;
+            $this->context->controller->addCSS($this->_path.'css/bamboraAdmin.css', 'all');
         }
-		$query = ' UPDATE ' . _DB_PREFIX_ . 'bambora_transactions SET `credited` = 1, `amount` = ' . $amount . ' WHERE `bambora_transaction_id` = ' . $transaction_id;
-		if(!Db::getInstance()->Execute($query))
-			return false;
-		return true;
-	}
+    }
 
-	private function deleteTransaction($transaction_id)
-	{
-		$query = ' UPDATE ' . _DB_PREFIX_ . 'bambora_transactions SET `deleted` = 1 WHERE `bambora_transaction_id` = ' . $transaction_id;
-		if(!Db::getInstance()->Execute($query))
-			return false;
-		return true;
-	}
+    /**
+     * Hook Display BackOffice Header
+     *
+     * @param mixed $params
+     */
+    public function hookDisplayBackOfficeHeader($params)
+    {
+        $this->hookBackOfficeHeader($params);
 
+    }
+
+	/**
+     * Get Content
+     *
+     * @return string
+     */
 	public function getContent()
 	{
 		$output = null;
 
 	    if (Tools::isSubmit('submit'.$this->name))
 	    {
-	        $bambora_merchantnumber = strval(Tools::getValue('BAMBORA_MERCHANTNUMBER'));
-	        if (!$bambora_merchantnumber  || empty($bambora_merchantnumber) || !Validate::isGenericName($bambora_merchantnumber))
-	            $output .= $this->displayError( $this->l('Merchant number is required. If you don\'t have one please contact Bambora in order to obtain one!') );
+	        $merchantnumber = strval(Tools::getValue('BAMBORA_MERCHANTNUMBER'));
+            $accesstoken = strval(Tools::getValue("BAMBORA_ACCESSTOKEN"));
+            $secrettoken = strval(Tools::getValue("BAMBORA_SECRETTOKEN"));
+	        if (empty($merchantnumber) || !Validate::isGenericName($merchantnumber))
+            {
+                $output .= $this->displayError('Merchant number '.$this->l('is required. If you don\'t have one please contact Bambora in order to obtain one!') );
+            }
+            elseif(empty($accesstoken) || !Validate::isGenericName($accesstoken))
+            {
+                $output .= $this->displayError('Access token '.$this->l('is required. If you don\'t have one please contact Bambora in order to obtain one!') );
+            }
+            elseif(empty($secrettoken) || !Validate::isGenericName($secrettoken))
+            {
+                $output .= $this->displayError('Secret token '.$this->l('is required. If you don\'t have one please contact Bambora in order to obtain one!') );
+            }
 	        else
 	        {
-				Configuration::updateValue('BAMBORA_MERCHANTNUMBER', Tools::getValue("BAMBORA_MERCHANTNUMBER"));
-				Configuration::updateValue('BAMBORA_PAYMENTWINDOWID', Tools::getValue("BAMBORA_PAYMENTWINDOWID"));
+				Configuration::updateValue('BAMBORA_MERCHANTNUMBER', $merchantnumber);
+				Configuration::updateValue('BAMBORA_ACCESSTOKEN', $accesstoken);
+                Configuration::updateValue('BAMBORA_SECRETTOKEN', $secrettoken);
+                Configuration::updateValue('BAMBORA_MD5KEY', Tools::getValue("BAMBORA_MD5KEY"));
+                Configuration::updateValue('BAMBORA_PAYMENTWINDOWID', Tools::getValue("BAMBORA_PAYMENTWINDOWID"));
 				Configuration::updateValue('BAMBORA_ENABLE_REMOTE_API', Tools::getValue("BAMBORA_ENABLE_REMOTE_API"));
 				Configuration::updateValue('BAMBORA_INSTANTCAPTURE', Tools::getValue("BAMBORA_INSTANTCAPTURE"));
-                Configuration::updateValue('BAMBORA_MD5KEY', Tools::getValue("BAMBORA_MD5KEY"));
-                Configuration::updateValue('BAMBORA_ACCESSTOKEN', Tools::getValue("BAMBORA_ACCESSTOKEN"));
                 Configuration::updateValue('BAMBORA_WINDOWSTATE', Tools::getValue("BAMBORA_WINDOWSTATE"));
                 Configuration::updateValue('BAMBORA_IMMEDIATEREDIRECTTOACCEPT', Tools::getValue("BAMBORA_IMMEDIATEREDIRECTTOACCEPT"));
-                if ( Tools::getValue("BAMBORA_SECRETTOKEN") != '**********')
-                {
-                    Configuration::updateValue('BAMBORA_SECRETTOKEN', Tools::getValue("BAMBORA_SECRETTOKEN"));
-                }
-                //persisting the base 64 encoded api password
-
-                $apiKey = Tools::getValue("BAMBORA_ACCESSTOKEN"). '@' .Tools::getValue("BAMBORA_MERCHANTNUMBER"). ':' .Configuration::get("BAMBORA_SECRETTOKEN");
-                $encodedKey = base64_encode($apiKey);
-                Configuration::updateValue('BAMBORA_REMOTE_API_PASSWORD', 'Basic '. $encodedKey);
+                Configuration::updateValue('BAMBORA_ONLYSHOWPAYMENTLOGOESATCHECKOUT', Tools::getValue("BAMBORA_ONLYSHOWPAYMENTLOGOESATCHECKOUT"));
+                Configuration::updateValue('BAMBORA_ADDFEETOSHIPPING', Tools::getValue("BAMBORA_ADDFEETOSHIPPING"));
 
 	            $output .= $this->displayConfirmation($this->l('Settings updated'));
 	        }
@@ -237,15 +182,19 @@ class Bambora extends PaymentModule
         return $output;
 	}
 
-
+    /**
+     * Display Form
+     *
+     * @return string
+     */
     private function displayForm()
     {
         // Get default Language
         $default_lang = (int)Configuration::get('PS_LANG_DEFAULT');
 
         $switch_options = array(
-            array( 'id' => 'active_on', 'value' => 1, 'label' => $this->l('Yes')),
-            array( 'id' => 'active_off', 'value' => 0, 'label' => $this->l('No')),
+            array( 'id' => 'active_on', 'value' => 1, 'label' => 'Yes'),
+            array( 'id' => 'active_off', 'value' => 0, 'label' => 'No'),
         );
         $windowstate_options=  array(
             array( 'type' => 2, 'name' => 'Overlay' ),
@@ -260,7 +209,7 @@ class Bambora extends PaymentModule
             'input' => array(
                 array(
                     'type' => 'switch',
-                    'label' => $this->l('Activate module'),
+                    'label' => 'Activate module',
                     'name' => 'BAMBORA_ENABLE_REMOTE_API',
                     'required' => false,
                     'is_bool' => true,
@@ -268,44 +217,43 @@ class Bambora extends PaymentModule
                  ),
                  array(
                     'type' => 'text',
-                    'label' => $this->l('Merchant number'),
+                    'label' => 'Merchant number',
                     'name' => 'BAMBORA_MERCHANTNUMBER',
                     'size' => 40,
-                    'required' => false,
-                    'class' => 'myTest',
-                    'id' => 'txtMerchantNo'
+                    'required' => true,
                 ),
                  array(
                     'type' => 'text',
-                    'label' => $this->l('Access token'),
+                    'label' => 'Access token',
                     'name' => 'BAMBORA_ACCESSTOKEN',
                     'size' => 40,
-                    'required' => false
+                    'required' => true
                 ),
                 array(
                     'type' => 'text',
-                    'label' => $this->l('Secret token'),
+                    'label' => 'Secret token',
                     'name' => 'BAMBORA_SECRETTOKEN',
                     'size' => 40,
-                    'required' => false
+                    'required' => true
                 ),
                 array(
                     'type' => 'text',
-                    'label' => $this->l('Payment Window ID'),
-                    'name' => 'BAMBORA_PAYMENTWINDOWID',
-                    'size' => 40,
-                    'required' => false
-                ),
-                array(
-                    'type' => 'text',
-                    'label' => $this->l('MD5 key'),
+                    'label' => 'MD5 key',
                     'name' => 'BAMBORA_MD5KEY',
                     'size' => 40,
                     'required' => false
                 ),
                 array(
+                    'type' => 'text',
+                    'label' => 'Payment Window ID',
+                    'name' => 'BAMBORA_PAYMENTWINDOWID',
+                    'size' => 40,
+                    'required' => false
+                ),
+
+                array(
                     'type' => 'switch',
-                    'label' => $this->l('Use instant capture'),
+                    'label' => 'Instant capture',
                     'name' => 'BAMBORA_INSTANTCAPTURE',
                     'required' => false,
                     'is_bool' => true,
@@ -313,15 +261,31 @@ class Bambora extends PaymentModule
                 ),
                 array(
                   'type' => 'switch',
-                    'label' => $this->l('Enable immediateredirect'),
+                    'label' => 'Immediateredirect',
                     'name' => 'BAMBORA_IMMEDIATEREDIRECTTOACCEPT',
                     'required' => false,
                     'is_bool' => true,
                     'values' => $switch_options
                 ),
                 array(
+                  'type' => 'switch',
+                    'label' => 'Only show payment logos at checkout',
+                    'name' => 'BAMBORA_ONLYSHOWPAYMENTLOGOESATCHECKOUT',
+                    'required' => false,
+                    'is_bool' => true,
+                    'values' => $switch_options
+                ),
+                array(
+                  'type' => 'switch',
+                    'label' => 'Add surcharge fee to shipping',
+                    'name' => 'BAMBORA_ADDFEETOSHIPPING',
+                    'required' => false,
+                    'is_bool' => true,
+                    'values' => $switch_options
+                ),
+                array(
                     'type' => 'select',
-                    'label' => $this->l('Display window as'),
+                    'label' => 'Display window as',
                     'name' => 'BAMBORA_WINDOWSTATE',
                     'required' => false,
                     'options' => array(
@@ -340,10 +304,8 @@ class Bambora extends PaymentModule
 
         );
 
-        $this->bootstrap = true;
         $helper = new HelperForm();
 
-        //mine
         $helper->table = $this->table;
         $this->fields_form = array();
 
@@ -381,13 +343,13 @@ class Bambora extends PaymentModule
         $helper->fields_value['BAMBORA_PAYMENTWINDOWID'] = Configuration::get('BAMBORA_PAYMENTWINDOWID');
         $helper->fields_value['BAMBORA_ENABLE_REMOTE_API'] = Configuration::get('BAMBORA_ENABLE_REMOTE_API');
         $helper->fields_value['BAMBORA_INSTANTCAPTURE'] = Configuration::get('BAMBORA_INSTANTCAPTURE');
-        $helper->fields_value['BAMBORA_MD5KEY'] = Configuration::get('BAMBORA_MD5KEY');
         $helper->fields_value['BAMBORA_ENABLE_PAYMENTREQUEST'] = Configuration::get('BAMBORA_ENABLE_PAYMENTREQUEST');
         $helper->fields_value['BAMBORA_ACCESSTOKEN'] = Configuration::get('BAMBORA_ACCESSTOKEN');
-        $helper->fields_value['BAMBORA_WINDOWSTATE'] = Configuration::get('BAMBORA_WINDOWSTATE');
         $helper->fields_value['BAMBORA_IMMEDIATEREDIRECTTOACCEPT'] = Configuration::get('BAMBORA_IMMEDIATEREDIRECTTOACCEPT');
-
-        $helper->fields_value['BAMBORA_SECRETTOKEN'] =  strlen(Configuration::get('BAMBORA_SECRETTOKEN')) > 0 ? '**********' : "";
+        $helper->fields_value['BAMBORA_ONLYSHOWPAYMENTLOGOESATCHECKOUT'] = Configuration::get('BAMBORA_ONLYSHOWPAYMENTLOGOESATCHECKOUT');
+        $helper->fields_value['BAMBORA_ADDFEETOSHIPPING'] =  Configuration::get('BAMBORA_ADDFEETOSHIPPING');
+        $helper->fields_value['BAMBORA_MD5KEY'] = Configuration::get('BAMBORA_MD5KEY');
+        $helper->fields_value['BAMBORA_SECRETTOKEN'] = Configuration::get('BAMBORA_SECRETTOKEN');
 
         $html =   '<div class="row">
                     <div class="col-xs-12 col-sm-12 col-md-7 col-lg-7 ">'
@@ -405,631 +367,318 @@ class Bambora extends PaymentModule
         return $html;
     }
 
-    private function buildHelptextForSettings(){
-
-        $html = str_replace("/n",'<br/>','<div class="panel helpContainer">
-                        <H3>'.$this->l('Help for settings').'</H3>
-
-                        <H5>'.$this->l('Activate module').'</H5>
-                        <p>'.$this->l('Set to "Yes" to enable Bambora payments./n
-                            If set to “No”, the Bambora payment option will not be visible to your customers.').'</p>
-                        <br/>
-                        <H5>'.$this->l('Merchant number').'</H5>
-                        <p>'.$this->l('Get your Merchant number from the').' <a href="https://admin.epay.eu/" target="_blank">'.$this->l('Bambora Administration').'</a> '.$this->l('via Settings > Merchant numbers.
-                        If you haven\'t got a Merchant number, please contact ').'<a href="http://www.bambora.com/da/dk/bamboraone/" target="_blank">Bambora</a> '.$this->l('to get one.').'
-                        <br/> <b>'.$this->l('Note').':</b> '.$this->l('This field is mandatory to enable payments').'
-                        </p>
-                        <br/>
-                        <H5>'.$this->l('Access token').'</H5>
-                        <p>'.$this->l('Get your Access token from the').' <a href="https://admin.epay.eu/" target="_blank">'.$this->l('Bambora Administration').'</a> '.$this->l('via Settings > API users. Copy the Access token from the API user into this field.').'
-                        <br/>
-                        <b>'.$this->l('Note').':</b>'.$this->l(' This field is mandatory in order to enable payments').'</p>
-                        <br/>
-                        <H5>'.$this->l('Secret token').'</H5>
-                        <p>'.$this->l('Get your Secret token from the').' <a href="https://admin.epay.eu/" target="_blank">'.$this->l('Bambora Administration').'</a> '.$this->l('via Settings > API users. The secret token is only displayed once when an API user is created! Please save this token in a safe place as Bambora will not be able to recover it.').'
-                        <br/> <b>'.$this->l('Note').': </b> '.$this->l('This field is mandatory in order to enable payments').'</p>
-                        <br/>
-                        <H5>'.$this->l('Payment Window ID').'</H5>
-                        <p>'.$this->l('Choose which payment window to use. You can create multiple payment windows in the').' <a href="https://admin.epay.eu/" target="_blank">'.$this->l('Bambora Administration').'</a> '.$this->l(' via Settings > Payment windows. /n
-                            This is useful if you want to show different layouts, payment types or transaction fees for various customers').'</p>
-                        <br/>
-                        <H5>'.$this->l('MD5 Key').'</H5>
-                        <p>'.$this->l('We recommend using MD5 to secure the data sent between your system and Bambora./nIf you have generated a MD5 key in the').' <a href="https://admin.epay.eu/" target="_blank">'.$this->l('Bambora Administration').'</a> '.$this->l('via Settings > Edit merchant, you have to enter the MD5 key here as well.').' /n
-                            <b>'.$this->l('Note').': </b>'.$this->l('The keys must be identical in the two systems.').'
-                        </p>
-                        <br/>
-                        <H5>'.$this->l('Use instant capture').'</H5>
-                        <p>'.$this->l('Enable this to capture the payment immediately. /n You should only use this setting, if your customer receives the goods immediately e.g. via downloads or services.').'
-                        </p>
-                         <br/>
-                        <H5>'.$this->l('Immediateredirect').'</H5>
-                        <p>'.$this->l('Please select if you to go directly to the order confirmation page when payment is completed').'
-                        </p>
-                        <br/>
-                        <H5>'.$this->l('Show window as').'</H5>
-                        <p>'.$this->l('Please select if you want the Payment window shown as an overlay or as full screen').'
-                        </p>
-
-                   </div>');
-
-        return $html;
-
-    }
-    private function merchantErrorMessage($reason)
+    /**
+     * Build Help Text For Settings
+     *
+     * @return mixed
+     */
+    private function buildHelptextForSettings()
     {
-        $message = "An error occured.";
-        if(isset($reason))
-        {
-            $message .= "<br/>Reason: ". $reason;
-        }
-        return $message;
-
-    }
-
-    private function getErrormessageUsingJSon($transMeta, $operationsMeta){
-        $errMessage = 'Could not lookup the transaction ';
-        if($transMeta["result"] == 'false')
-        {
-            $errMessage .= 'reason: '. $transMeta["message"]["merchant"];
-        }else
-        {
-            if($operationsMeta["result"] == 'false')
-            {
-                $errMessage .= 'reason: '. $operationsMeta["message"]["merchant"];
-            }
-        }
-
-        return $errMessage;
-    }
-
-    private function getHtmlcontent($transaction, $params)
-    {
-        $html = "";
-
-        if ( !(Configuration::get('BAMBORA_ENABLE_REMOTE_API')))
-        {
-            $html .= $this->l('The Remote API is not enabled, please do so in order to start using this module.')
-                  . '<br />'
-                  .$this ->l('In order to do this, go to the Prestashop administration section, select "Modules and Services" > "Modules and Services". Locate the Bambora module and click the "Configure" button.');
-            return $html;
-        }
-        if (( strlen(Configuration::get('BAMBORA_MERCHANTNUMBER') ) == 0 ) || ( strlen(Configuration::get('BAMBORA_REMOTE_API_PASSWORD') ) == 0 ))
-        {
-            $html .= $this-> l('Before you start to use the Bambora payment module, you need to configurate it.')
-                    . '<br />'
-                    .$this-> l('The "Remote API password" and the "Merchant number" should be set.')
-                    . '<br />'
-                    .$this -> l('In order to do this, go to the Prestashop administration section, select "Modules and Services" > "Modules and Services". Locate the Bambora module and click the "Configure" button.');
-            return $html;
-        }
-
-		try
-		{
-            $apiKey = strval(Configuration::get('BAMBORA_REMOTE_API_PASSWORD'));
-            $api = new BamboraApi($apiKey);
-
-			$getTransaction = $api->gettransaction($transaction["bambora_transaction_id"]);
-
-            if(!$getTransaction["meta"]["result"])
-            {
-                return $this->merchantErrorMessage($getTransaction["meta"]["message"]["merchant"]);
-            }
-
-            $getTransactionOperation = $api->gettransactionoperations($transaction["bambora_transaction_id"]);
-
-            if(!$getTransactionOperation["meta"]["result"])
-            {
-                return $this->merchantErrorMessage($getTransactionOperation["meta"]["message"]["merchant"]);
-            }
-
-            $transactionInfo = $getTransaction["transaction"];
-            $transactionOperations = $getTransactionOperation["transactionoperations"];
-
-
-            $lastAction = $transactionOperations[0]["action"];
-            $lastCreateDate = $transactionOperations[0]["createddate"];
-
-            foreach($transactionOperations as $arr)
-            {
-                foreach($arr["transactionoperations"] as $op)
-                {
-                    if ($lastCreateDate < $op["createddate"])
-                    {
-                        $lastCreateDate = $op["createddate"];
-                        $lastAction = $op["action"];
-                    }
-                }
-            }
-
-            $currency_code = $transactionInfo["currency"]["code"];
-            $bambora_amount = BamboraCurrency::convertPriceFromMinorUnits($transactionInfo["total"]["authorized"],$transactionInfo["currency"]["minorunits"]);
-
-
-            $html .= '<div class="row">
-
-                        <div class="col-xs-12 col-md-6 col-lg-4 col-sm-12">'
-                            .$this->buildPaymentTable($bambora_amount, $transaction, $lastAction, $transactionInfo)
-                            .$this ->buildButtonsForm($transactionInfo, $transaction, $bambora_amount, $lastAction,$currency_code)
-                        .'</div>
-
-                        <div class="col-md-6 col-lg-4 hidden-xs hidden-sm">'
-                            .$this -> buildTransactionLogtable($transactionOperations)
-                        .'</div>
-
-                        <div class="col-lg-4 visible-lg text-center hidden-sm">'
-                            .$this -> buildLogodiv(true)
-                        .'</div>'
-                    .'</div>';
-
-            $html .= '<div class="row visible-xs visible-sm">
-                        <div class="col-xs-12 bambora-transaction-log">'
-                        .$this -> buildTransactionLogtable($transactionOperations)
-                        .'</div>
-                     </div>';
-
-        }
-		catch (Exception $e)
-		{
-			$this->displayError($e->getMessage());
-		}
-
-        return $html;
-    }
-
-    private function buildButtonsForm($transInfo, $transaction, $bambora_amount, $lastAction)
-    {
-        $html = '';
-        if ($transInfo["available"]["capture"] > 0 or $transInfo["available"]["credit"] > 0 or $transInfo["candelete"] == 'true')
-        {
-            $html .= '<form name="bambora_remote" action="' . $_SERVER["REQUEST_URI"] . '" method="post" class="bambora_displayInline" >'
-                . '<input type="hidden" name="bambora_transaction_id" value="' . $transaction["bambora_transaction_id"] . '" />'
-                . '<input type="hidden" name="bambora_order_id" value="' . $transaction["id_cart"] . '" />'
-                . '<input type="hidden" name="bambora_amount" value="' . $bambora_amount . '" size="' . strlen($bambora_amount) . '" />'
-                . '<input type="hidden" name="bambora_currency" value="' . $transInfo["currency"]["code"] . '" />';
-
-            $html .= '<br />';
-
-            $html .= '<div id="divBamboraTransactionControlsContainer" class="bambora-buttons clearfix">';
-            $html .= $this ->buildSpinner();
-
-            $minorUnits = $transInfo["currency"]["minorunits"];
-
-            $availableForCapture = BamboraCurrency::convertPriceFromMinorUnits($transInfo["available"]["capture"], $minorUnits);
-
-            $availableForCredit = BamboraCurrency::convertPriceFromMinorUnits($transInfo["available"]["credit"], $minorUnits);
-
-            if ($availableForCapture > 0)
-            {
-                $html .= $this ->  buildTransactionControlInclTextField('capture' ,  $this->l('Capture'), "btn bambora_confirm_btn", true, $availableForCapture, $transInfo["currency"]["code"]  );
-            }
-
-            if($availableForCredit > 0)
-            {
-                $html .= $this ->  buildTransactionControlInclTextField('credit', $this->l('Refund'), "btn bambora_credit_btn", true, $availableForCredit,$transInfo["currency"]["code"]  );
-            }
-
-            if ($transInfo["candelete"] == 'true')
-            {
-                $html .= $this ->  buildTransactionControl('delete', $this->l('Delete'), "btn bambora_delete_btn");
-            }
-
-            $html .= '</div></form>';
-        }
-
-        return $html;
-    }
-
-    private function getCurrentOrderValue(){
-        $order = new Order(Tools::getValue('id_order'));
-
-        if (!Validate::isLoadedObject($order))
-        {
-            $this->errors[] = Tools::displayError($this->l('The order cannot be found within your database.'));
-        }
-
-        $currentOrderValue = floatval($order->getOrdersTotalPaid());
-        return $currentOrderValue;
-    }
-
-    private function buildTransactionControlInclTextField($type, $value, $class, $addInputField = false, $valueOfInputfield = 0, $currencycode = "")
-    {
-        $html = '<div>
-                    <div class="bambora_floatLeft">
-                        <div class="bambora_confirm_frame" >
-                            <input  class="'.$class.'" name="unhide_'.$type.'" type="button" value="' . strtoupper($value) . '"  />
-                       </div>
-                        <div class="bamboraButtonFrame bambora_hidden bamboraButtonFrameIncreesedsize row" data-hasinputfield="'.$addInputField .'">'
-                            .'<div class="col-xs-3">
-                                <a class="bambora_cancel"></a>
-                             </div>
-                             <div class="col-xs-5">
-                                <input type="text" title="please fill out a valid number" required="required" name="bambora_'.$type.'_value" value="'.BamboraHelpers::displayPricewithoutCurrency($valueOfInputfield, $this->context ) .'" />
-                               <p>'. $currencycode.'</p>
-                            </div>
-                             <div class="col-xs-4">
-                                <input class="'.$class.'" name="bambora_'.$type.'" type="submit" value="' .strtoupper($value) . '" />
-                             </div>
-                         </div>
-                      </div>
+        $html = '<div class="panel helpContainer">
+                        <H3>Help for settings</H3>
+                        <div>
+                            <H5>Activate module</H5>
+                            <p>Set to "Yes" to enable Bambora payments.<br/>If set to "No", the Bambora payment option will not be visible to your customers</p>
+                        </div>
+                        <br/>
+                        <div>
+                            <H5>Merchant number</H5>
+                            <p>Get your Merchant number from the <a href="https://admin.epay.eu/" target="_blank">Bambora Administration</a> via Settings > Merchant numbers. If you haven\'t got a Merchant number, please contact <a href="http://www.bambora.com/" target="_blank">Bambora</a> to get one.</p>
+                            <p><b>Note: </b>This field is mandatory to enable payments</p>
+                        </div>
+                        <br/>
+                        <div>
+                            <H5>Access token</H5>
+                            <p>Get your Access token from the <a href="https://admin.epay.eu/" target="_blank"> Bambora Administration</a> via Settings > API users. Copy the Access token from the API user into this field</p>
+                            <p><b>Note:</b> This field is mandatory in order to enable payments</p>
+                        </div>
+                        <br/>
+                        <div>
+                            <H5>Secret token</H5>
+                            <p>Get your Secret token from the <a href="https://admin.epay.eu/" target="_blank">Bambora Administration</a> via Settings > API users. The secret token is only displayed once when an API user is created! Please save this token in a safe place as Bambora will not be able to recover it.</p>
+                            <p><b>Note: </b>This field is mandatory in order to enable payments.</p>
+                        </div>
+                        <br/>
+                        <div>
+                            <H5>MD5 Key</H5>
+                            <p>We recommend using MD5 to secure the data sent between your system and Bambora.<br/>If you have generated a MD5 key in the <a href="https://admin.epay.eu/" target="_blank">Bambora Administration</a> via Settings > Edit merchant, you have to enter the MD5 key here as well.</p>
+                            <p><b>Note: </b>The keys must be identical in the two systems.</p>
+                        </div>
+                        <br/>
+                        <div>
+                            <H5>Payment Window ID</H5>
+                            <p>Choose which payment window to use. You can create multiple payment windows in the <a href="https://admin.epay.eu/" target="_blank">Bambora Administration</a> via Settings > Payment windows. </p>
+                        </div>
+                        <br/>
+                        <div>
+                            <H5>Instant capture</H5>
+                            <p>Enable this to capture the payment immediately. <br/> You should only use this setting, if your customer receives the goods immediately e.g. via downloads or services.</p>
+                        </div>
+                        <br/>
+                        <div>
+                            <H5>Immediateredirect</H5>
+                            <p>Please select if you to go directly to the order confirmation page when payment is completed</p>
+                        </div>
+                        <br/>
+                        <div>
+                            <H5>Only show payment logos at checkout</H5>
+                            <p>By enabling this the text will disappear from the payment option</p>
+                        </div>
+                        <br/>
+                        <div>
+                            <H5>Add Surcharge fee to shipping</H5>
+                            <p>Enable this if you want the payment surcharge fee to be added to the shipping and handling fee</p>
+                        </div>
+                        <br/>
+                        <div>
+                            <H5>Display window as</H5>
+                            <p>Please select if you want the Payment window shown as an overlay or as full screen</p>
+                        </div>
                    </div>';
+
         return $html;
     }
+    #endregion
 
-    private function buildTransactionControl($type, $value, $class)
+    #region front office
+
+    /**
+     * Hook payment options for Prestashop 1.7
+     *
+     * @param mixed $params
+     * @return PrestaShop\PrestaShop\Core\Payment\PaymentOption[]
+     */
+    public function hookPaymentOptions($params)
     {
-        $html = '<div>
-                   <div class="bambora_floatLeft">
-                       <div class="bambora_confirm_frame" >
-                           <input  class="'.$class.'" name="unhide_'.$type.'" type="button" value="' .strtoupper($value) . '"  />
-                      </div>
-                      <div class="bamboraButtonFrame bambora_hidden bambora-normalSize row" data-hasinputfield="false">
-                           <div class="col-xs-6">
-                               <a class="bambora_cancel"></a>
-                          </div>
-                          <div class="col-xs-6">
-                             <input class="'.$class.'" name="bambora_'.$type.'" type="submit" value="'  .strtoupper($value) . '" />
-                          </div>
-                      </div>
-                   </div>
-                </div>';
+        if (!$this->active) {
+            return;
+        }
+        $cart = $params['cart'];
+        if (!$this->checkCurrency($cart)) {
+            return;
+        }
+        $currency = new Currency(intval($cart->id_currency));
 
-        return $html;
+        $minorUnits = BamboraCurrency::getCurrencyMinorunits($currency->iso_code);
+        $totalAmountMinorunits = BamboraCurrency::convertPriceToMinorUnits($cart->getOrderTotal(),$minorUnits);
+
+        $paymentcardIds = $this->getPaymentCardIds($currency->iso_code, $totalAmountMinorunits);
+
+        $paymentInfoData = array('paymentCardIds' => $paymentcardIds,
+                                 'onlyShowLogoes' => Configuration::get('BAMBORA_ONLYSHOWPAYMENTLOGOESATCHECKOUT')
+                                );
+        $this->context->smarty->assign($paymentInfoData);
+
+        $bamboraPaymentOption = new PrestaShop\PrestaShop\Core\Payment\PaymentOption();
+        $bamboraPaymentOption->setCallToActionText("Bambora Checkout")
+                       ->setAction($this->context->link->getModuleLink($this->name, 'payment', array(), true))
+                       ->setAdditionalInformation($this->context->smarty->fetch('module:bambora/views/templates/front/paymentinfo.tpl'));
+
+        $paymentOptions = array();
+        $paymentOptions[] = $bamboraPaymentOption;
+
+        return $paymentOptions;
     }
 
-
-    private function buildPaymentTable($bambora_amount, $transaction, $lastAction, $transInfo)
-    {
-
-        $html = '<table class="bambora-table">
-                   <tr><th>'
-                      .$this -> l('Payment')
-                  .'</th></tr>'
-
-                .'<tr><td>'. $this -> l('Amount') .':</td>';
-
-        $css = "";
-        switch( $lastAction )
-        {
-            case  'Delete':
-                $css = "badge-important bambora-badge-critical";
-                break;
-
-            case "Credit":
-                $css = "badge-warning";
-                break;
-
-            case 'Authorize':
-            case 'Capture':
-                $css = "badge-success";
-                break;
-
-            default:
-                $css = "badge-info";
-                break;
-        }
-
-        $html .='<td><div class="badge bambora-badge-big ' . $css . '" title="'. $this->l("Amount available for capture").'">';
-
-        if ($this-> context -> currency -> iso_code == $transInfo["currency"]["code"] )
-        {
-            $formatetAmount = Tools::displayPrice($bambora_amount);
-
-            $html .= $formatetAmount .'</div></td></tr>';
-        }
-        else
-        {
-            $html .= $bambora_amount .' ' .$transInfo["currency"]["code"] .'</td></tr>';
-        }
-
-        $html .='<tr><td>'. $this -> l('Order Id') .':</td><td>'. $transaction["id_cart"].'</td></tr>';
-
-        foreach($transInfo["information"]["primaryaccountnumbers"] as $cardnumber)
-        {
-
-            $formattedCardnumber = BamboraHelpers::formatTruncatedCardnumber($cardnumber["number"]);
-            $html .= '<tr><td>'.   $this-> l('Cardnumber') .':</td><td>' .$formattedCardnumber .'</td></tr>';
-        }
-
-        $html .='<tr><td>'. $this-> l('Status') .':</td>';
-        $html .='<td>';
-
-        switch( $lastAction )
-        {
-            case  'Delete':
-                $html .= $this->l('Deleted');
-                break;
-
-            case 'Authorize':
-                $html .= $this->l('Authorized') ;
-                break;
-
-            case 'Credit':
-                $html .= $this->l('Credited') ;
-                break;
-
-            case 'Capture':
-                $html .=$this->l('Captured') ;
-                break;
-
-            default:
-                $html .=$lastAction;
-                break;
-        }
-
-        $html .= '</td></tr></table>';
-
-        return $html;
-    }
-
-    private function buildLogodiv($makeAslinkToAdminSite = false)
-    {
-        $html = '<a href="http://admin.epay.eu/Account/Login" alt="" title="' . $this->l('Go to Bambora Merchant') . '" target="_blank">';
-        $html .= '<img class="bambora_logo" src="https://d3r1pwhfz7unl9.cloudfront.net/bambora/bambora_black_300px.png" />';
-        $html .= '</a>';
-        $html .= '<div><a href="http://admin.epay.eu/Account/Login"  alt="" title="' . $this->l('Go to Bambora Merchant') . '" target="_blank">' .$this->l('Go to Bambora Merchant') .'</a></div>';
-
-        return $html;
-    }
-
-
-    private function buildTransactionLogtable($operations){
-
-        $html = "";
-
-        if (count($operations) > 0 )
-        {
-            $html .= '<table class="bambora-table">
-                        <tr>
-                            <th colpan="2">' . $this -> l('Transaction log') .'</th>
-                        </tr>
-                        <tr>
-                            <td class="bambora-td-head">' . $this->l('Date') . '</td>
-                            <td class="bambora-td-head">' . $this->l('Event') . '</td>
-                            <td class="bambora-td-head">' . $this->l('Amount') . '</td>
-                        </tr>';
-
-            foreach($operations as $arr)
-            {
-                $html .=$this -> buildTransactionLogRow($arr);
-
-                foreach($arr["transactionoperations"] as $op)
-                {
-                    $html .=$this -> buildTransactionLogRow($op);
-                }
-            }
-
-            $html .= '</table>';
-        }
-
-        return $html;
-    }
-
-    private function buildTransactionLogRow($operation)
-    {
-
-        $html = '<tr>';
-
-        $zone =  date_default_timezone_get();
-        $tz = new DateTimeZone($zone);
-        $date = str_replace("T", " ",substr($operation["createddate"],0,19));
-
-        $utcDate = new DateTime($date,new DateTimeZone('UTC'));
-        $localDate = $utcDate->setTimezone($tz);
-
-        if ($this->context->language->language_code == 'en_US')
-        {
-            //show date as December 17, 2015, 01:49:45 PM
-            $html .= '<td>' . $localDate->format('F d\, Y\, g:i:s a') .'</td>';
-        }
-        else
-        {
-            //show date as 17. December 2015, 13:49:45"
-            $html .= '<td>' . $localDate->format('d\. F Y\, H:i:s') .'</td>';
-        }
-        $minorUnits = $operation["currency"]["minorunits"];
-        // $html .= '<td>' .$this->l($operation["action"])  .' '. Tools::displayPrice(BamboraCurrency::convertPriceFromMinorUnits($operation["amount"],$minorUnits), null, false, $this->context) ."</td>";
-
-        $html .= '<td>' .$this->l($operation["action"]).'</td>';
-        $html .= '<td>' .Tools::displayPrice(BamboraCurrency::convertPriceFromMinorUnits($operation["amount"],$minorUnits), null, false, $this->context).'</td>';
-
-
-        $html .= '</tr>';
-
-        return $html;
-    }
-
-	private function buildBamboraContainerStartTag()
-    {
-        $return = '<script type="text/javascript" src="'.$this->_path.'js/bamboraScripts.js" charset="UTF-8"></script>';
-
-        if ( _PS_VERSION_ >= "1.6.0.0")
-        {
-            $return .= '<div class="row" >';
-            $return .= '<div class="col-lg-12">';
-            $return .= '<div class="panel bambora_widthAllSpace" style="overflow:auto">';
-        }
-        else
-        {
-            $return .= '<style type="text/css">
-                            .table td{white-space:nowrap;overflow-x:auto;}
-                        </style>';
-            $return .= '<br /><fieldset><legend><img src="../img/admin/money.gif">Bambora</legend>';
-        }
-
-        return $return;
-    }
-
-    private function buildBamboraContainerStopTag(){
-
-        $return = '';
-        if ( _PS_VERSION_ >= "1.6.0.0")
-        {
-            $return .= "</div>";
-            $return .= "</div>";
-            $return .= "</div>";
-        }else
-        {
-            $return .= "</fieldset>";
-        }
-        return $return;
-    }
-
-	private function displayTransactionForm($params, $order)
-	{
-        $transactions = $this->getStoredTransaction(intval($params["id_order"]));
-
-        $return = $this-> buildBamboraContainerStartTag();
-
-        if (count($transactions) == 0)
-        {
-            if ($order -> module == 'bambora')
-            {
-                $return .= 'No payment transaction was found';
-                $return .= $this ->buildBamboraContainerStopTag();
-                return $return;
-            }
-        }
-
-        if (count($transactions) > 1)
-        {
-            $return .= 'too many transactions returned!!!!';
-            $return .= $this ->buildBamboraContainerStopTag();
-            return $return;
-        }
-
-        $order = new Order($params['id_order']);
-
-
-
-        // Init Fields form array
-        foreach($transactions as $transaction)
-        {
-            if(isset($transaction["bambora_transaction_id"]) && $transaction["module"] == "bambora")
-            {
-                $return .= '<div class="panel-heading">';
-                if($transaction["card_type"] != "0")
-                {
-                    $return .= '<img class="bambora_paymentCardLogo" src="https://d3r1pwhfz7unl9.cloudfront.net/paymentlogos/' . $transaction["card_type"] . '.png" alt="' . BamboraHelpers::getCardNameById(intval($transaction["card_type"])) . '" title="' . BamboraHelpers::getCardNameById(intval($transaction["card_type"])) . '" align="middle">';
-                }
-                $return .= ' Bambora </div>';
-
-                $return .= $this->getHtmlcontent($transaction, $params);
-            }
-        }
-
-        $return .= $this -> buildBamboraContainerStopTag();
-
-		return $return;
-	}
-
-
+    /**
+     * Hook payment for Prestashop before 1.7
+     *
+     * @param mixed $params
+     * @return mixed
+     */
     public function hookPayment($params)
     {
         if (!$this->active)
 			return;
 
-		if (!$this->checkCurrency($this->context->cart))
+		if (!$this->checkCurrency($params['cart']))
 			return;
 
-        $invoiceAddress = new Address(intval($params['cart']->id_address_invoice));
-        $deliveryAddress = new Address(intval($params['cart']->id_address_delivery));
-        $mobileNumber = $invoiceAddress->phone_mobile != "" ? $invoiceAddress->phone_mobile : $deliveryAddress->phone_mobile;
+        $cart = $params['cart'];
+        $bamboraCheckoutRequest = $this->createCheckoutRequest($cart);
+        $bamboraPaymentData = $this->getBamboraPaymentData($bamboraCheckoutRequest);
 
-        $bamboraCustommer = $this->create_bambora_custommer($mobileNumber);
-        $bamboraOrder = $this->create_bambora_order($invoiceAddress,$deliveryAddress);
-        $bamboraUrl = $this ->create_bambora_url($bamboraOrder->ordernumber, $bamboraOrder->currency, $bamboraOrder->total);
-
-        $request = new BamboraCheckoutRequest();
-        $request -> capturemulti = true; //TODO make config
-        $request -> customer = $bamboraCustommer;
-        $request -> instantcaptureamount =  Configuration::get('BAMBORA_INSTANTCAPTURE') == 1 ? $bamboraOrder -> total : 0;
-        $request -> language = str_replace("_","-",$this->context->language->language_code);
-        $request -> order = $bamboraOrder;
-        $request -> url = $bamboraUrl;
-
-        $paymentWindowId = Configuration::get('BAMBORA_PAYMENTWINDOWID');
-
-        $request->paymentwindowid =  is_numeric($paymentWindowId) ?  $paymentWindowId : 1;
-        $apiKey = strval(Configuration::get('BAMBORA_REMOTE_API_PASSWORD'));
-        $api = new BamboraApi($apiKey);
-
-        $expressRes = $api -> getcheckoutresponse($request);
-
-        $json = json_decode($expressRes, true);
-
-        if (!$json['meta']['result'])
+        $checkoutResponse = $bamboraPaymentData['checkoutResponse'];
+        if(!isset($checkoutResponse) || $checkoutResponse['meta']['result'] == false)
         {
-            $errormessage = $json['meta']['message']['enduser'];
+            $errormessage = $checkoutResponse['meta']['message']['enduser'];
             $this->context->smarty->assign('bambora_errormessage', $errormessage);
             $this->context->smarty->assign( 'this_path_bambora', $this->_path);
             return $this->display(__FILE__ , "checkoutIssue.tpl");
         }
 
-        $bamboraPaymentwindowUrl = $api->getcheckoutpaymentwindowjs();
+        $bamboraOrder = $bamboraCheckoutRequest->order;
 
-        $bamboraCheckoutUrl = $json['url'];
+        $paymentcardIds = $this->getPaymentCardIds($bamboraOrder->currency, $bamboraOrder->total);
 
+        $paymentData = array('bamboraPaymentCardIds' => $paymentcardIds,
+                             'bamboraPaymentwindowUrl' => $bamboraPaymentData['paymentWindowUrl'],
+                             'bamboraWindowState' => Configuration::get('BAMBORA_WINDOWSTATE'),
+                             'bamboraCheckouturl' => $checkoutResponse['url'],
+                             'onlyShowLogoes' => Configuration::get('BAMBORA_ONLYSHOWPAYMENTLOGOESATCHECKOUT')
+                             );
 
-        $paymentcardIds = array();
-        $paymentcardIds = $api -> getAvaliablePaymentcardidsForMerchant($bamboraOrder->currency,$bamboraOrder->total);
+        $this->context->smarty->assign($paymentData);
 
-        $this->context->smarty->assign(array('paymentcardIds'=> $paymentcardIds, 'this_path_bambora' => $this->_path));
-
-        $this->context->smarty->assign(array(
-            'bambora_paymentwindowurl' => $bamboraPaymentwindowUrl,
-            'bambora_windowstate' =>  Configuration::get('BAMBORA_WINDOWSTATE'),
-            'bambora_checkouturl' => $bamboraCheckoutUrl,
-            'bambora_path' => $this->_path,
-            'bambora_psVersionIsnewerOrEqualTo160'=> _PS_VERSION_ >= "1.6.0.0" ? true: false
-            ));
-
-        return $this->display(__FILE__ , "checkoutpaymentwindow.tpl");
+        return $this->display(__FILE__ , "bamboracheckout.tpl");
     }
 
-
+    /**
+     * Check Currency
+     *
+     * @param mixed $cart
+     * @return boolean
+     */
     private function checkCurrency($cart)
-	{
-		$currency_order = new Currency((int)($cart->id_currency));
-		$currencies_module = $this->getCurrency((int)$cart->id_currency);
-
-		if (is_array($currencies_module))
-			foreach ($currencies_module as $currency_module)
-				if ($currency_order->id == $currency_module['id_currency'])
-					return true;
-		return false;
-	}
-
-    private function create_bambora_custommer($mobileNumber)
     {
+        $currency_order = new Currency($cart->id_currency);
+        $currencies_module = $this->getCurrency($cart->id_currency);
+        if (is_array($currencies_module)) {
+            foreach ($currencies_module as $currency_module) {
+                if ($currency_order->id == $currency_module['id_currency']) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Get Payment Card Ids
+     *
+     * @param mixed $currency
+     * @param mixed $amount
+     * @return array
+     */
+    public function getPaymentCardIds($currency, $amount)
+    {
+        $apiKey = $this->getApiKey();
+        $api = new BamboraApi($apiKey);
+        return $api->getAvaliablePaymentcardidsForMerchant($currency, $amount);
+    }
+
+    public function getBamboraPaymentData($checkoutRequest)
+    {
+        $apiKey = $this->getApiKey();
+        $api = new BamboraApi($apiKey);
+
+        $checkoutResponse = $api->getcheckoutresponse($checkoutRequest);
+
+        $bamboraPaymentwindowUrl = $api->getcheckoutpaymentwindowjs();
+        $paymentData = array('checkoutResponse' => $checkoutResponse,
+                             'paymentWindowUrl' => $bamboraPaymentwindowUrl
+                             );
+
+        return $paymentData;
+    }
+
+    /**
+     * Create Checkout Request
+     *
+     * @param mixed $cart
+     * @return BamboraCheckoutRequest
+     */
+    public function createCheckoutRequest($cart)
+    {
+        $invoiceAddress = new Address(intval($cart->id_address_invoice));
+        $deliveryAddress = new Address(intval($cart->id_address_delivery));
+
+        $bamboraCustommer = $this->createBamboraCustommer($cart, $invoiceAddress);
+        $bamboraOrder = $this->createBamboraOrder($cart, $invoiceAddress, $deliveryAddress);
+        $bamboraUrl = $this->createBamboraUrl($bamboraOrder->ordernumber, $bamboraOrder->currency, $bamboraOrder->total);
+
+        $language = new Language(intval($cart->id_lang));
+
+        $request = new BamboraCheckoutRequest();
+        $request->customer = $bamboraCustommer;
+        $request->instantcaptureamount =  Configuration::get('BAMBORA_INSTANTCAPTURE') == 1 ? $bamboraOrder->total : 0;
+        $request->language = str_replace("_","-",$language->language_code);
+        $request->order = $bamboraOrder;
+        $request->url = $bamboraUrl;
+
+        $paymentWindowId = Configuration::get('BAMBORA_PAYMENTWINDOWID');
+
+        $request->paymentwindowid = is_numeric($paymentWindowId) ?  $paymentWindowId : 1;
+
+        return $request;
+    }
+
+    /**
+     * Create Bambora Custommer
+     *
+     * @param mixed $cart
+     * @param mixed $invoiceAddress
+     * @return BamboraCustomer
+     */
+    private function createBamboraCustommer($cart, $invoiceAddress)
+    {
+        $mobileNumber = $this->getPhoneNumber($invoiceAddress);
+        $country = new Country(intval($invoiceAddress->id_country));
+        $customer = new Customer(intval($cart->id_customer));
 
         $bamboraCustommer = new BamboraCustomer();
-        $bamboraCustommer ->email = $this->context->customer->email;
-        $bamboraCustommer ->phonenumber = $mobileNumber;
-        $bamboraCustommer ->phonenumbercountrycode = $this->context->country->call_prefix;
+        $bamboraCustommer->email = $customer->email;
+        $bamboraCustommer->phonenumber = $mobileNumber;
+        $bamboraCustommer->phonenumbercountrycode = $country->call_prefix;
         return $bamboraCustommer;
     }
 
-    private function create_bambora_order($invoiceAddress, $deliveryAddress)
+    /**
+     * Get Phone Number
+     *
+     * @param mixed $invoiceAddress
+     * @return mixed
+     */
+    public function getPhoneNumber($address)
+    {
+        if($address->phone_mobile != "" || $address->phone != "")
+        {
+            return $address->phone_mobile != "" ? $address->phone_mobile : $address->phone;
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    /**
+     * Create Bambora Order
+     *
+     * @param mixed $cart
+     * @param mixed $invoiceAddress
+     * @param mixed $deliveryAddress
+     * @return BamboraOrder
+     */
+    private function createBamboraOrder($cart, $invoiceAddress, $deliveryAddress)
     {
         $bamboraOrder = new BamboraOrder();
-        $bamboraOrder->billingaddress = $this->create_bambora_invoice_address($invoiceAddress);
+        $bamboraOrder->billingaddress = $this->createBamboraAddress($invoiceAddress);
 
-        $bamboraOrder->currency = $this->context->currency->iso_code;
-        $bamboraOrder->lines = $this->create_bambora_orderlines($bamboraOrder->currency);
+        $currency = new Currency(intval($cart->id_currency));
 
-        $bamboraOrder -> ordernumber = (string)$this->context->cart->id;
+        $bamboraOrder->currency = $currency->iso_code;
+        $bamboraOrder->lines = $this->createBamboraOrderlines($cart, $bamboraOrder->currency);
 
-        $bamboraOrder->shippingaddress = $this->create_bambora_delivery_address($deliveryAddress);
+        $bamboraOrder->ordernumber = (string)$cart->id;
+
+        $bamboraOrder->shippingaddress = $this->createBamboraAddress($deliveryAddress);
 
         $minorUnits = BamboraCurrency::getCurrencyMinorunits($bamboraOrder->currency);
 
-        $bamboraOrder -> total = BamboraCurrency::convertPriceToMinorUnits($this->context->cart->getOrderTotal(),$minorUnits);
+        $bamboraOrder->total = BamboraCurrency::convertPriceToMinorUnits($cart->getOrderTotal(),$minorUnits);
 
-        $bamboraOrder -> vatamount = BamboraCurrency::convertPriceToMinorUnits($this->context->cart->getOrderTotal() - $this->context->cart->getOrderTotal(false),$minorUnits);
+        $bamboraOrder->vatamount = BamboraCurrency::convertPriceToMinorUnits($cart->getOrderTotal() - $cart->getOrderTotal(false),$minorUnits);
 
         return $bamboraOrder;
     }
-    private function create_bambora_invoice_address($address)
+
+    /**
+     * Create Bambora Address
+     *
+     * @param mixed $address
+     * @return BamboraAddress
+     */
+    private function createBamboraAddress($address)
     {
         $bamboraAddress = new BamboraAddress();
         $bamboraAddress->att = $address->other;
@@ -1043,25 +692,19 @@ class Bambora extends PaymentModule
         return $bamboraAddress;
     }
 
-    private function create_bambora_delivery_address($address)
-    {
-        $bamboraAddress = new BamboraAddress();
-        $bamboraAddress->att = $address->other;
-        $bamboraAddress->city = $address->city;
-        $bamboraAddress->country = $address->country;
-        $bamboraAddress->firstname = $address->firstname;
-        $bamboraAddress->lastname = $address->lastname;
-        $bamboraAddress->street = $address->address1;
-        $bamboraAddress->zip = $address->postcode;
 
-        return $bamboraAddress;
-    }
-
-    private function create_bambora_orderlines($currency)
+    /**
+     * Create Bambora Order Lines
+     *
+     * @param mixed $cart
+     * @param mixed $currency
+     * @return BamboraOrderLine[]
+     */
+    private function createBamboraOrderlines($cart, $currency)
     {
         $bamboraOrderlines = array();
 
-        $products = $this->context->cart->getproducts();
+        $products = $cart->getproducts();
         $lineNumber = 1;
         $minorUnits = BamboraCurrency::getCurrencyMinorunits($currency);
         foreach($products as $product)
@@ -1075,7 +718,7 @@ class Bambora extends PaymentModule
             $line->totalprice = BamboraCurrency::convertPriceToMinorUnits($product["total"],$minorUnits);
             $line->totalpriceinclvat = BamboraCurrency::convertPriceToMinorUnits($product["total_wt"],$minorUnits);
             $line->totalpricevatamount = BamboraCurrency::convertPriceToMinorUnits($product["total_wt"] - $product["total"],$minorUnits);
-            $line->unit = $this->l("pcs.");
+            $line->unit = $this->l('pcs.');
             $line->vat = $product["rate"];
 
             $bamboraOrderlines[] = $line;
@@ -1083,15 +726,15 @@ class Bambora extends PaymentModule
         }
 
         //Add shipping as an orderline
-        $shippingCostWithTax = $this->context->cart->getTotalShippingCost(null,true,null);
-        $shippingCostWithoutTax = $this->context->cart->getTotalShippingCost(null,false,null);
+        $shippingCostWithTax = $cart->getTotalShippingCost(null,true,null);
+        $shippingCostWithoutTax = $cart->getTotalShippingCost(null,false,null);
         if($shippingCostWithTax > 0)
         {
             $shippingOrderline = new BamboraOrderLine();
-            $shippingOrderline->id = $this->l("shipping.");
-            $shippingOrderline->description = $this->l("shipping.");
+            $shippingOrderline->id = $this->l('shipping.');
+            $shippingOrderline->description = $this->l('shipping.');
             $shippingOrderline->quantity = 1;
-            $shippingOrderline->unit = $this->l("pcs.");
+            $shippingOrderline->unit = $this->l('pcs.');
             $shippingOrderline->linenumber = $lineNumber++;
             $shippingOrderline->totalprice = BamboraCurrency::convertPriceToMinorUnits($shippingCostWithoutTax, $minorUnits);
             $shippingOrderline->totalpriceinclvat = BamboraCurrency::convertPriceToMinorUnits($shippingCostWithTax, $minorUnits);
@@ -1103,20 +746,23 @@ class Bambora extends PaymentModule
         return $bamboraOrderlines;
     }
 
-
-
-
-
-
-    private function create_bambora_url($orderId,$currency,$amount)
+    /**
+     * Create Bambora Url
+     *
+     * @param mixed $orderId
+     * @param mixed $currency
+     * @param mixed $amount
+     * @return BamboraUrl
+     */
+    private function createBamboraUrl($orderId,$currency,$amount)
     {
         $bamboraUrl = new BamboraUrl();
-        $bamboraUrl->accept = $this->context->link->getModuleLink('bambora', 'validation', array(), true);
+        $bamboraUrl->accept = $this->context->link->getModuleLink('bambora', 'accept', array(), true);
         $bamboraUrl->decline = $this->context->link->getPageLink('order', true, null, "step=3");
 
 		$bamboraUrl->callbacks = array();
 		$callback = new BamboraCallback();
-		$callback->url = $this->context->link->getModuleLink('bambora', 'validation', array('callback' => 1), true);
+		$callback->url = $this->context->link->getModuleLink('bambora', 'callback', array(), true);
         $bamboraUrl->callbacks[] = $callback;
 
         $bamboraUrl->immediateredirecttoaccept = Configuration::get('BAMBORA_IMMEDIATEREDIRECTTOACCEPT') ? 1 : 0;
@@ -1124,73 +770,88 @@ class Bambora extends PaymentModule
         return $bamboraUrl;
     }
 
-
-    function showPaymentWindowInIFrameProvidingUrl($url)
-    {
-        echo '<br /><iframe id="imdb" width="80%" height="600px" src="'.$url.'"></iframe>';
-    }
-
-	public function hookPaymentReturn($params)
+    /**
+     * Hook Payment Return
+     *
+     * @param mixed $params
+     * @return mixed
+     */
+    public function hookPaymentReturn($params)
 	{
 		if(!$this->active)
+        {
 			return;
+        }
 
-        $result = Db::getInstance()->getRow('
-            SELECT o.`id_order`, o.`module`, e.`id_cart`, e.`bambora_transaction_id`,
-                   e.`card_type`,  e.`currency`, e.`amount`, e.`transfee`,
-                   e.`captured`, e.`credited`, e.`deleted`,
-                   e.`date_add`
-            FROM ' . _DB_PREFIX_ . 'bambora_transactions e
-            LEFT JOIN ' . _DB_PREFIX_ . 'orders o ON e.`id_cart` = o.`id_cart`
-            WHERE o.`id_order` = ' . intval($_GET["id_order"]));
+        $order = null;
+        if ($this->getPsVersion() === $this::V17)
+        {
+            $order = $params['order'];
+        }
+        else
+        {
+            $order = $params['objOrder'];
+        }
 
+        $payment = $order->getOrderPayments();
+        $transactionId = $payment[0]->transaction_id;
+        $this->context->smarty->assign('bambora_completed_paymentText', $this->l('You completed your payment.'));
 
-        $this->context->smarty->assign('bambora_completed_paymentText', $this->l('You just completed your payment.'));
-
-        if($result['bambora_transaction_id'])
+        if($transactionId)
         {
             $this->context->smarty->assign('bambora_completed_transactionText', $this->l('Your transaction ID for this payment is:'));
-            $this->context->smarty->assign('bambora_completed_transactionValue', $result['bambora_transaction_id']);
+            $this->context->smarty->assign('bambora_completed_transactionValue', $transactionId);
         }
-        if($this->context->customer->email)
+
+        $customer = new Customer($order->id_customer);
+
+        if($customer->email)
         {
             $this->context->smarty->assign('bambora_completed_emailText', $this->l('An confirmation email has been sendt to:'));
-            $this->context->smarty->assign('bambora_completed_emailValue',$this->context->customer->email);
+            $this->context->smarty->assign('bambora_completed_emailValue',$customer->email);
         }
 
-		return $this->display(__FILE__ , 'payment_return.tpl');
+		return $this->display(__FILE__ , 'views/templates/front/payment_return.tpl');
 	}
 
+    #endregion
 
+    #region admin
 
-    function displayAttributeGroupPostProcess($params)
+    /**
+     * Hook Admin Order
+     *
+     * @param mixed $params
+     * @return string
+     */
+    public function hookAdminOrder($params)
     {
-        return "";
+        $html = '';
+
+        $bamboraUiMessage = $this->processRemote($params);
+        if(isset($bamboraUiMessage))
+        {
+            $this->buildOverlayMessage($bamboraUiMessage->type, $bamboraUiMessage->title, $bamboraUiMessage->message);
+        }
+
+        $order = new Order($params['id_order']);
+
+        if ($order->module == 'bambora')
+        {
+            $html .=  $this->displayTransactionForm($order);
+        }
+
+        return $html;
     }
 
-    function hookAdminOrder($params) //Called when the order's details are displayed, below the Client Information block
-	{
-        $html = '';
-        $activate_api = Configuration::get('BAMBORA_ENABLE_REMOTE_API');
-        if($activate_api == 1)
-        {
-            if(strlen($this->BamboraUiMessage ->type) > 0)
-            {
-                $this->buildOverlayMessage($this->BamboraUiMessage ->type,$this->BamboraUiMessage->title, $this->BamboraUiMessage ->message);
-            }
-
-            $order = new Order($params['id_order']);
-
-            if ($order->module == 'bambora')
-            {
-                $html .=  $this->displayTransactionForm($params, $order);
-            }
-        }
-        return $html;
-	}
-
-
-    function buildOverlayMessage($type,$title, $message)
+    /**
+     * Build Overlay Message
+     *
+     * @param mixed $type
+     * @param mixed $title
+     * @param mixed $message
+     */
+    private function buildOverlayMessage($type, $title, $message)
     {
         $html = '
             <a id="bambora_inline" href="#data"></a>
@@ -1221,203 +882,546 @@ class Bambora extends PaymentModule
         echo $html;
     }
 
-    function showCheckmark(){
-        $html = '<div class="bambora-circle bambora-checkmark_circle">
-                        <div class="bambora-checkmark_stem"></div>
-                    </div>';
-        return $html;
-    }
+    /**
+     * Display Transaction Form
+     *
+     * @param mixed $order
+     * @return string
+     */
+    private function displayTransactionForm($order)
+	{
+        $payments = $order->getOrderPayments();
+		$transactionId = $payments[0]->transaction_id;
 
-    function showExclamation(){
-        $html = '<div class="bambora-circle bambora-exclamation_circle">
-                        <div class="bambora-exclamation_stem"></div>
-                        <div class="bambora-exclamation_dot"></div>
-                    </div>';
-        return $html;
-    }
+        $html = $this-> buildBamboraContainerStartTag();
 
-    private function getStoredTransaction($id_order)
+        if (empty($transactionId))
+        {
+
+            $html .= 'No payment transaction was found';
+            $html .= $this->buildBamboraContainerStopTag();
+            return $html;
+
+        }
+        $cardBrand = $payments[0]->card_brand;
+
+        $html .= '<div class="panel-heading">';
+        if(!empty($cardBrand))
+        {
+            $html .= "Bambora Checkout ({$cardBrand})";
+        }
+        else
+        {
+            $html .= "Bambora Checkout";
+        }
+        $html .= '</div>';
+
+        $html .= $this->getHtmlcontent($transactionId, $order);
+
+
+
+        $html .= $this->buildBamboraContainerStopTag();
+
+		return $html;
+	}
+
+    /**
+     * Build Bambora Container Start Tag
+     *
+     * @return string
+     */
+    private function buildBamboraContainerStartTag()
     {
-        $transactions = Db::getInstance()->executeS('
-		SELECT o.`id_order`, o.`module`, e.`id_cart`, e.`bambora_transaction_id`,
-			   e.`card_type`, e.`currency`, e.`amount`, e.`transfee`,
-			   e.`captured`, e.`credited`, e.`deleted`,
-			   e.`date_add`
-		FROM ' . _DB_PREFIX_ . 'bambora_transactions e
-		LEFT JOIN ' . _DB_PREFIX_ . 'orders o ON e.`id_cart` = o.`id_cart`
-		WHERE o.`id_order` = ' .$id_order );
-        return $transactions;
+        $html = '<script type="text/javascript" src="'.$this->_path.'js/bamboraScripts.js" charset="UTF-8"></script>';
+        if($this->getPsVersion() === $this::V15)
+        {
+            $html .= '<style type="text/css">
+                            .table td{white-space:nowrap;overflow-x:auto;}
+                        </style>';
+            $html .= '<br /><fieldset><legend><img src="../img/admin/money.gif">Bambora Checkout</legend>';
+        }
+        else
+        {
+            $html .= '<div class="row" >';
+            $html .= '<div class="col-lg-12">';
+            $html .= '<div class="panel bambora_widthAllSpace" style="overflow:auto">';
+        }
+
+
+        return $html;
     }
 
-    //works!!!!
-    public function hookDisplayPDFInvoice($params){
-
-        $transaction = $this->getStoredTransaction($params["object"]->id_order);
-
-        $transactionid = $transaction[0]["bambora_transaction_id"];
-        if ($transactionid == null)
+    /**
+     * Build Bambora Container Stop Tag
+     *
+     * @return string
+     */
+    private function buildBamboraContainerStopTag()
+    {
+        if ($this->getPsVersion() === $this::V15)
         {
-            $transactionid = $_GET['txnid'];
+            $html = "</fieldset>";
+        }
+        else
+        {
+            $html = "</div>";
+            $html .= "</div>";
+            $html .= "</div>";
+
         }
 
-        $apiKey = strval(Configuration::get('BAMBORA_REMOTE_API_PASSWORD'));
-        $api = new BamboraApi($apiKey);
-        $trans = $api->gettransaction($transactionid);
+        return $html;
+    }
 
-        $transMeta = $api->convertJSonResultToArray($trans, "meta");
-        $transInfo = $api->convertJSonResultToArray($trans, "transaction");
+    /**
+     * Get Html Content
+     *
+     * @param mixed $transactionId
+     * @param mixed $order
+     * @return string
+     */
+    private function getHtmlcontent($transactionId, $order)
+    {
+        $html = "";
+		try
+		{
+            $apiKey = $this->getApiKey();
+            $api = new BamboraApi($apiKey);
 
-        $result = "";
-        if ($transMeta["result"])
-        {
-            $cardname ="card";
-            $truncated_cardnumber ="";
+			$bamboraTransaction = $api->gettransaction($transactionId);
 
-            $status = $transInfo["status"];
-            foreach( $transInfo["information"]["paymenttypes"] as $paymenttype)
+            if(!$bamboraTransaction["meta"]["result"])
             {
-                //we can only handle one paymenttype here - enshure only to take the correct paymenttype here
-                $cardname = $paymenttype["displayname"];
+                return $this->merchantErrorMessage($bamboraTransaction["meta"]["message"]["merchant"]);
             }
 
-            foreach($transInfo["information"]["primaryaccountnumbers"] as $cardnumber)
+            $bamboraTransactionOperations = $api->gettransactionoperations($transactionId);
+
+            if(!$bamboraTransactionOperations["meta"]["result"])
             {
-                //the payment must be performed with just one creditcard, there shouldn't be more than one card here.
-                $truncated_cardnumber = $cardnumber["number"];
+                return $this->merchantErrorMessage($bamboraTransactionOperations["meta"]["message"]["merchant"]);
             }
 
-            $formattedCardnumber = BamboraHelpers::formatTruncatedCardnumber($truncated_cardnumber);
+            $transactionInfo = $bamboraTransaction["transaction"];
+            $transactionOperations = $bamboraTransactionOperations["transactionoperations"];
+            $currency = new Currency($order->id_currency);
+            $html .= '<div class="row">
 
-            $result = '<table><tr><td><b>'.$this->l("Payment information").' '. $cardname . '</b></td></tr><tr><td>Status: '. $status .' &#8226; '.$this->l("TransactionId").':' .$transactionid .' &#8226; '.$this -> l('Cardnumber') .': '.$formattedCardnumber .'</td></tr></table>';
+                        <div class="col-xs-12 col-md-4 col-lg-4 col-sm-12">'
+                            .$this->buildPaymentTable($transactionInfo, $currency)
+                            .$this->buildButtonsForm($transactionInfo)
+                        .'</div>
+
+                        <div class="col-md-8 col-lg-6 hidden-xs hidden-sm">'
+                            .$this->createCheckoutTransactionOperationsHtml($transactionOperations, $currency)
+                        .'</div>
+
+                        <div class="col-lg-2 visible-lg text-center hidden-sm">'
+                            .$this->buildLogodiv(true)
+                        .'</div>'
+                    .'</div>';
         }
+		catch (Exception $e)
+		{
+			$this->displayError($e->getMessage());
+		}
+
+        return $html;
+    }
+
+    /**
+     * Build Payment Table
+     *
+     * @param mixed $transactionInfo
+     * @param mixed $currency
+     * @return string
+     */
+    private function buildPaymentTable($transactionInfo, $currency)
+    {
+        $html = '<table class="bambora-table">
+                 <tr><th>'.$this->l('Payment').'</th></tr>'
+                .'<tr><td>'. $this->l('Amount') .':</td>';
+
+        $html .='<td><div class="badge bambora-badge-big badge-success" title="'. $this->l('Amount available for capture').'">';
+
+        $amount = BamboraCurrency::convertPriceFromMinorUnits($transactionInfo["total"]["authorized"], $transactionInfo["currency"]["minorunits"]);
+
+        $formatetAmount = Tools::displayPrice($amount, $currency);
+
+        $html .= $formatetAmount .'</div></td></tr>';
+
+        $html .='<tr><td>'. $this -> l('Order Id') .':</td><td>'. $transactionInfo["orderid"].'</td></tr>';
+
+        $formattedCardnumber = BamboraHelpers::formatTruncatedCardnumber($transactionInfo["information"]["primaryaccountnumbers"][0]["number"]);
+        $html .= '<tr><td>'. $this->l('Cardnumber').':</td><td>' .$formattedCardnumber .'</td></tr>';
+
+        $html .='<tr><td>'. $this->l('Status') .':</td><td>'. $this->checkoutStatus($transactionInfo["status"]).'</td></tr>';
+
+        $html .= '</table>';
+
+        return $html;
+    }
+
+    /**
+     * Set the first letter to uppercase
+     *
+     * @param string $status
+     * @return string
+     */
+    private function checkoutStatus($status)
+    {
+        if(!isset($status))
+        {
+            return "";
+        }
+        $firstLetter = substr($status,0,1);
+        $firstLetterToUpper = strtoupper($firstLetter);
+        $result = str_replace($firstLetter,$firstLetterToUpper,$status);
 
         return $result;
     }
 
-    private function getTransctionInfo($bambora_transaction_id)
+    private function buildButtonsForm($transactionInfo)
     {
-        $returnArr["success"] = true;
-        $returnArr["transinfo"] = null;
-        $returnArr["errorMessage"] = null;
-
-
-    	$apiKey = strval(Configuration::get('BAMBORA_REMOTE_API_PASSWORD'));
-        $api = new BamboraApi($apiKey);
-
-	    $transaction = $api->gettransaction($bambora_transaction_id);
-
-        if($transaction["meta"]["result"] == false)
+        $html = '';
+        if ($transactionInfo["available"]["capture"] > 0 || $transactionInfo["available"]["credit"] > 0 || $transactionInfo["candelete"] == 'true')
         {
-            return $this->merchantErrorMessage($transaction["meta"]["message"]["merchant"]);
+            $html .= '<form name="bambora_remote" action="' . $_SERVER["REQUEST_URI"] . '" method="post" class="bambora_displayInline" id="bambora-action" >'
+                . '<input type="hidden" name="bambora_transaction_id" value="' . $transactionInfo["id"] . '" />'
+                . '<input type="hidden" name="bambora_order_id" value="' . $transactionInfo["orderid"] . '" />'
+                . '<input type="hidden" name="bambora_currency_code" value="' . $transactionInfo["currency"]["code"] . '" />';
+
+            $html .= '<br />';
+
+            $html .= '<div id="divBamboraTransactionControlsContainer" class="bambora-buttons clearfix">';
+            $html .= $this->buildSpinner();
+
+            $minorUnits = $transactionInfo["currency"]["minorunits"];
+
+            $availableForCapture = BamboraCurrency::convertPriceFromMinorUnits($transactionInfo["available"]["capture"], $minorUnits);
+
+            $availableForCredit = BamboraCurrency::convertPriceFromMinorUnits($transactionInfo["available"]["credit"], $minorUnits);
+
+            if ($availableForCapture > 0)
+            {
+                $html .= $this->buildTransactionControlInclTextField('capture', $this->l('Capture'), "btn bambora_confirm_btn", true, $availableForCapture, $transactionInfo["currency"]["code"]);
+            }
+
+            if($availableForCredit > 0)
+            {
+                $html .= $this->buildTransactionControlInclTextField('credit', $this->l('Refund'), "btn bambora_credit_btn", true, $availableForCredit, $transactionInfo["currency"]["code"]);
+            }
+
+            if ($transactionInfo["candelete"] == 'true')
+            {
+                $html .= $this->buildTransactionControl('delete', $this->l('Delete'), "btn bambora_delete_btn");
+            }
+
+            $html .= '</div></form>';
+            $html .= '<div id="bambora-format-error" class="alert alert-danger"><strong>'.$this->l('Warning').' </strong>'.$this->l('The amount you entered was in the wrong format. Please try again!').'</div>';
         }
 
-        $transinfo = $transaction["transaction"];
-
-        $returnArr["transinfo"] = $transinfo;
-
-        return $returnArr;
-
+        return $html;
     }
 
-	private function procesRemote($params)
-	{
-		$bamboraUiMessage = new BamboraUiMessage();
-        if((Tools::isSubmit('bambora_capture') OR Tools::isSubmit('bambora_credit') OR Tools::isSubmit('bambora_delete')) AND Tools::getIsset('bambora_transaction_id'))
-		{
-            $result = "";
-            try{
-                $apiKey = strval(Configuration::get('BAMBORA_REMOTE_API_PASSWORD'));
-                $api = new BamboraApi($apiKey);
+    /**
+     * Create Checkout Transaction Operations Html
+     *
+     * @param mixed $transactionOperations
+     * @param mixed $currency
+     * @return string
+     */
+    private function createCheckoutTransactionOperationsHtml($transactionOperations, $currency)
+    {
+        $res = '<br/>';
+        $res .= "<table class='bambora_operations_table' border='0' width='100%'>";
+        $res .= '<tr><td colspan="6" class="bambora_operations_title"><strong>'.$this->l('Transaction Operations'). '</strong></td></tr>';
+        $res .= '<th>'.$this->l('Date').'</th>';
+        $res .= '<th>'.$this->l('Action').'</th>';
+        $res .= '<th>'.$this->l('Amount').'</th>';
+        $res .= '<th>'.$this->l('ECI').'</th>';
+        $res .= '<th>'.$this->l('Operation ID').'</th>';
+        $res .= '<th>'.$this->l('Parent Operation ID').'</th>';
 
-                $currency = $this->context->currency->iso_code;
-                $minorUnits = BamboraCurrency::getCurrencyMinorunits($currency);
-                $convertedCaptureValue = 0;
-                $convertedCreditValue = 0;
+        $res .= $this->createTranactionOperationItems($transactionOperations, $currency);
+
+        $res .= '</table>';
+
+        return $res;
+    }
+
+    /**
+     * Create Tranaction Operation Items
+     *
+     * @param mixed $transactionOperations
+     * @param mixed $currency
+     * @return string
+     */
+    private function createTranactionOperationItems($transactionOperations, $currency)
+    {
+        $res = "";
+        foreach($transactionOperations as $operation)
+        {
+            $res .= '<tr>';
+            $date = str_replace("T", " ",substr($operation["createddate"], 0, 19));
+            $res .= '<td>' . Tools::displayDate($date).'</td>' ;
+            $res .= '<td>' . $operation["action"]  .'</td>';
+            if($operation["amount"] > 0)
+            {
+                $amount = BamboraCurrency::convertPriceFromMinorUnits($operation["amount"], $operation["currency"]["minorunits"]);
+                $res .= '<td>' .Tools::displayPrice($amount, $currency) . '</td>';
+            }
+            else
+            {
+                $res .= '<td> - </td>';
+            }
+
+            if(key_exists("ecis",$operation) && is_array($operation["ecis"]) && count($operation["ecis"])> 0)
+            {
+                $res .= '<td>' . $operation["ecis"][0]["value"] .'</td>';
+            }
+            else
+            {
+                $res .= '<td> - </td>';
+            }
+
+            $res .= '<td>' . $operation["id"] . '</td>';
+
+            if(key_exists("parenttransactionoperationid",$operation) &&  $operation["parenttransactionoperationid"] > 0)
+            {
+                $res .= '<td>' . $operation["parenttransactionoperationid"] .'</td>';
+            }
+            else
+            {
+                $res .= '<td> - </td>';
+            }
+
+            if(key_exists("transactionoperations", $operation) && count($operation["transactionoperations"]) > 0)
+            {
+                $res .= $this->createTranactionOperationItems($operation["transactionoperations"], $currency);
+            }
+            $res .= '</tr>';
+        }
+
+        return $res;
+    }
+
+    /**
+     * Build Logo Div
+     *
+     * @param mixed $makeAslinkToAdminSite
+     * @return string
+     */
+    private function buildLogodiv($makeAslinkToAdminSite = false)
+    {
+        $html = '<a href="https://admin.epay.eu/Account/Login" alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">';
+        $html .= '<img class="bambora_logo" src="https://d3r1pwhfz7unl9.cloudfront.net/bambora/bambora_black_300px.png" />';
+        $html .= '</a>';
+        $html .= '<div><a href="https://admin.epay.eu/Account/Login"  alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">' .$this->l('Go to Bambora Merchant Administration') .'</a></div>';
+
+        return $html;
+    }
+
+    /**
+     * Build Transaction Control Incl Text Field
+     *
+     * @param mixed $type
+     * @param mixed $value
+     * @param mixed $class
+     * @param mixed $addInputField
+     * @param mixed $valueOfInputfield
+     * @param mixed $currencycode
+     * @return string
+     */
+    private function buildTransactionControlInclTextField($type, $value, $class, $addInputField = false, $valueOfInputfield = 0, $currencycode = "")
+    {
+        $tooltip = $this->l('Example: 1234.56');
+        $html = '<div>
+                    <div class="bambora_floatLeft">
+                        <div class="bambora_confirm_frame" >
+                            <input  class="'.$class.'" name="unhide_'.$type.'" type="button" value="' . strtoupper($value) . '"  />
+                       </div>
+                        <div class="bamboraButtonFrame bambora_hidden bamboraButtonFrameIncreesedsize row" data-hasinputfield="'.$addInputField .'">'
+                            .'<div class="col-xs-3">
+                                <a class="bambora_cancel"></a>
+                             </div>
+                             <div class="col-xs-5">
+                                <input id="bambora-action-input" type="text" data-toggle="tooltip" title="'.$tooltip.'" required="required" name="bambora_'.$type.'_value" value="'.$valueOfInputfield .'" />
+                               <p>'. $currencycode.'</p>
+                            </div>
+                             <div class="col-xs-4">
+                                <input class="'.$class.'" name="bambora_'.$type.'" type="submit" value="' .strtoupper($value) . '" />
+                             </div>
+                         </div>
+                      </div>
+                   </div>';
+
+        return $html;
+    }
+
+    /**
+     * Build Transaction Control
+     *
+     * @param mixed $type
+     * @param mixed $value
+     * @param mixed $class
+     * @return string
+     */
+    private function buildTransactionControl($type, $value, $class)
+    {
+        $html = '<div>
+                   <div class="bambora_floatLeft">
+                       <div class="bambora_confirm_frame" >
+                           <input  class="'.$class.'" name="unhide_'.$type.'" type="button" value="' .strtoupper($value) . '"  />
+                      </div>
+                      <div class="bamboraButtonFrame bambora_hidden bambora-normalSize row" data-hasinputfield="false">
+                           <div class="col-xs-6">
+                               <a class="bambora_cancel"></a>
+                          </div>
+                          <div class="col-xs-6">
+                             <input class="'.$class.'" name="bambora_'.$type.'" type="submit" value="'  .strtoupper($value) . '" />
+                          </div>
+                      </div>
+                   </div>
+                </div>';
+
+        return $html;
+    }
+
+    /**
+     * Show Checkmark
+     *
+     * @return string
+     */
+    private function showCheckmark()
+    {
+        $html = '<div class="bambora-circle bambora-checkmark_circle">
+                        <div class="bambora-checkmark_stem"></div>
+                    </div>';
+
+        return $html;
+    }
+
+    /**
+     * Show Exclamation
+     *
+     * @return string
+     */
+    private function showExclamation()
+    {
+        $html = '<div class="bambora-circle bambora-exclamation_circle">
+                        <div class="bambora-exclamation_stem"></div>
+                        <div class="bambora-exclamation_dot"></div>
+                    </div>';
+
+        return $html;
+    }
+
+    /**
+     * Process Remote
+     *
+     * @param mixed $params
+     * @return BamboraUiMessage|null
+     */
+    private function processRemote($params)
+	{
+        $bamboraUiMessage = null;
+        if((Tools::isSubmit('bambora_capture') || Tools::isSubmit('bambora_credit') || Tools::isSubmit('bambora_delete')) && Tools::getIsset('bambora_transaction_id') && Tools::getIsset('bambora_currency_code'))
+		{
+            $bamboraUiMessage = new BamboraUiMessage();
+            $result = "";
+            try
+            {
+                $transactionId = Tools::getValue("bambora_transaction_id");
+                $currencyCode = Tools::getValue("bambora_currency_code");
+                $minorUnits = BamboraCurrency::getCurrencyMinorunits($currencyCode);
+
+                $apiKey = $this->getApiKey();
+                $api = new BamboraApi($apiKey);
 
                 if(Tools::isSubmit('bambora_capture'))
                 {
+                    $captureInputValue = Tools::getValue('bambora_capture_value');
 
-                    $convertedCaptureValue =  BamboraHelpers::handleUserAmountInput(Tools::getValue('bambora_capture_value'), null, $this->context );
+                    $amountSanitized = str_replace(',','.', $captureInputValue);
+                    $amount = floatval($amountSanitized);
+                    if(is_float($amount))
+                    {
+                        $amountMinorunits = BamboraCurrency::convertPriceToMinorUnits($amount, $minorUnits);
 
-                    if (is_float($convertedCaptureValue))
+                        $result = $api->capture($transactionId, $amountMinorunits, $currencyCode);
+                    }
+                    else
                     {
-                        $result = $api->capture(Tools::getValue('bambora_transaction_id'),BamboraCurrency::convertPriceToMinorUnits($convertedCaptureValue,$minorUnits),  Tools::getValue('bambora_currency'));
-                    }else
-                    {
-                        $bamboraUiMessage->type = $this->l("issue");
-                        $bamboraUiMessage->title = $this->l("Inputfield is not a valid number");
+                        $bamboraUiMessage->type = 'issue';
+                        $bamboraUiMessage->title = $this->l('Inputfield is not a valid number');
                         return $bamboraUiMessage;
                     }
                 }
                 elseif(Tools::isSubmit('bambora_credit'))
                 {
-                    $convertedCreditValue =  BamboraHelpers::handleUserAmountInput(Tools::getValue('bambora_credit_value'), null, $this->context );
+                    $captureInputValue = Tools::getValue('bambora_credit_value');
 
-                    if (is_float(floatval(Tools::getValue('bambora_credit_value'))))
+                    $amountSanitized = str_replace(',','.', $captureInputValue);
+                    $amount = floatval($amountSanitized);
+                    if(is_float($amount))
                     {
-                        $result = $api->credit( Tools::getValue('bambora_transaction_id'),BamboraCurrency::convertPriceToMinorUnits($convertedCreditValue,$minorUnits),  Tools::getValue('bambora_currency'));
+                        $amountMinorunits = BamboraCurrency::convertPriceToMinorUnits($amount, $minorUnits);
+
+                        $invoiceLine = $this->buildCreditInvoiceLine($amountMinorunits);
+
+                        $result = $api->credit($transactionId, $amountMinorunits, $currencyCode, $invoiceLine);
                     }
                     else
                     {
-                        $bamboraUiMessage->type = $this->l("issue");
-                        $bamboraUiMessage->title = $this->l("Inputfield is not a valid number");
+                        $bamboraUiMessage->type = 'issue';
+                        $bamboraUiMessage->title = $this->l('Inputfield is not a valid number');
                         return $bamboraUiMessage;
                     }
                 }
                 elseif(Tools::isSubmit('bambora_delete'))
                 {
-                    $result = $api->delete( Tools::getValue('bambora_transaction_id'));
+                    $result = $api->delete($transactionId);
                 }
 
-                $serviceAnswer = $api ->convertJSonResultToArray($result, "meta");
-
-                if ($serviceAnswer["result"] == true)
+                if ($result["meta"]["result"] === true)
                 {
-                    $temp = $this-> getTransctionInfo(Tools::getValue('bambora_transaction_id'));
-                    if ($temp["success"])
-                    {
-                        $transinfo = $temp["transinfo"];
-                        $currentActuallyPaidvalue = BamboraCurrency::convertPriceFromMinorUnits($transinfo["total"]["captured"] - $transinfo["total"]["credited"],$minorUnits);
-                        $this -> updateOrderPayment(Tools::getValue('bambora_transaction_id'),$currentActuallyPaidvalue);
-                    }
-
                     if(Tools::isSubmit('bambora_capture'))
                     {
-                        $this->setCaptured(Tools::getValue('bambora_transaction_id'), BamboraCurrency::convertPriceToMinorUnits(floatval(Tools::getValue('bambora_amount')),$minorUnits));
                         $captureText = $this->l('The Payment was') . ' ' . $this -> l('captured') .' '.$this->l('successfully');
-
                         $bamboraUiMessage->type = "capture";
                         $bamboraUiMessage->title = $captureText;
 
-                    }elseif(Tools::isSubmit('bambora_credit'))
+                    }
+                    elseif(Tools::isSubmit('bambora_credit'))
                     {
-                        $this->setCredited(Tools::getValue('bambora_transaction_id'),BamboraCurrency::convertPriceToMinorUnits(floatval(Tools::getValue('bambora_amount')),$minorUnits));
                         $creditText = $this -> l('The Payment was') . ' ' . $this -> l('refunded') .' '.$this->l('successfully');
                         $bamboraUiMessage->type = "credit";
                         $bamboraUiMessage->title = $creditText;
 
-                    }elseif(Tools::isSubmit('bambora_delete'))
+                    }
+                    elseif(Tools::isSubmit('bambora_delete'))
                     {
-                        $this->deleteTransaction(Tools::getValue('bambora_transaction_id'));
-                        $deleteText = $this->l('The payment was').' '. $this -> l('delete') .' '.$this->l('successfully');
+                        $deleteText = $this->l('The Payment was').' '. $this -> l('delete') .' '.$this->l('successfully');
                         $bamboraUiMessage->type = "delete";
                         $bamboraUiMessage->title = $deleteText;
                     }
-                }else
+                }
+                else
                 {
                     $bamboraUiMessage->type = "issue";
-                    $bamboraUiMessage->title = $this->l("An issue occured, and the operation was not performed.");
-                    if ( $serviceAnswer["message"] != null && $serviceAnswer["message"]["merchant"] != null)
+                    $bamboraUiMessage->title = $this->l('An issue occured, and the operation was not performed.');
+                    if (isset($result["message"]) && isset($result["message"]["merchant"]))
                     {
-                        $message = $serviceAnswer["message"]["merchant"];
+                        $message = $result["message"]["merchant"];
 
-                        if($serviceAnswer["action"] != null && $serviceAnswer["action"]["source"] == "ePayEngine" && ($serviceAnswer["action"]["code"] == "113" || $serviceAnswer["action"]["code"] == "114"))
+                        if(isset($message["action"]) && $result["action"]["source"] == "ePayEngine" && ($result["action"]["code"] == "113" || $result["action"]["code"] == "114"))
                         {
                             preg_match_all('!\d+!', $message, $matches);
                             foreach($matches[0] as $match)
                             {
-                                $convertedAmount = Tools::displayPrice(BamboraCurrency::convertPriceFromMinorUnits($match,$minorUnits));
-                                $message = str_replace($match,$convertedAmount,$message);
+                                $convertedAmount = Tools::displayPrice(BamboraCurrency::convertPriceFromMinorUnits($match, $minorUnits));
+                                $message = str_replace($match, $convertedAmount, $message);
                             }
                         }
                         $bamboraUiMessage->message = $message;
@@ -1426,34 +1430,141 @@ class Bambora extends PaymentModule
             }
             catch(Exception $e)
             {
-                $activate_api = false;
                 $this->displayError($e->getMessage());
             }
 		}
+
         return $bamboraUiMessage;
 	}
 
-    private function updateOrderPayment($transactionid,$amount)
+    /**
+     * Build Credit Invoice Line
+     *
+     * @param mixed $amount
+     * @return array
+     */
+    private function buildCreditInvoiceLine($amount)
     {
-        $order = new Order(Tools::getValue('id_order'));
+        $result = array(
+            "description" => "Prestashop credit item",
+            "id" => "1",
+            "linenumber" => "1",
+            "quantity" => 1,
+            "text" => "Prestashop credit item",
+            "totalprice" => $amount,
+            "totalpriceinclvat" => $amount,
+            "totalpricevatamount" => 0,
+            "unit"=>"pcs.",
+            "vat"=>0
+            );
 
-        $payments = $order->getOrderPayments();
-		$payment = $payments[count($payments) - 1];
-
-        $payment->amount = $amount;
-        $payment->transaction_id = $transactionid;
-        $payment->save();
-        $order->update();
+        return $result;
     }
 
-    function buildSpinner(){
-        $html = '<div id="bamboraSpinner" class="bamboraButtonFrame bamboraButtonFrameIncreesedsize row"><div class="col-lg-10">'.$this->l("processing").'... </div><div class="col-lg-2"><div class="bambora-spinner"><img src="'.$this->_path.'img/arrows.svg" class="bambora-spinner"></div></div></div>';
+    /**
+     * Build Spinner
+     *
+     * @return string
+     */
+    private function buildSpinner()
+    {
+        $html = '<div id="bamboraSpinner" class="bamboraButtonFrame bamboraButtonFrameIncreesedsize row"><div class="col-lg-10">'.$this->l('Working').'... </div><div class="col-lg-2"><div class="bambora-spinner"><img src="'.$this->_path.'img/arrows.svg" class="bambora-spinner"></div></div></div>';
+
         return $html;
     }
 
-    function alertMessage($message)
+    /**
+     * Merchant Error Message
+     *
+     * @param mixed $reason
+     * @return string
+     */
+    private function merchantErrorMessage($reason)
     {
-        $alert = '<script type="text/javascript">alert("'.$message .'");</script>';
-        echo $alert;
+        $message = "An error occured.";
+        if(isset($reason))
+        {
+            $message .= "<br/>Reason: ". $reason;
+        }
+
+        return $message;
     }
+
+    #endregion
+
+    #region Display PDF
+
+    /**
+     * Hook Display PDF Invoice
+     *
+     * @param mixed $params
+     * @return string
+     */
+    public function hookDisplayPDFInvoice($params)
+    {
+        $invoice = $params["object"];
+        $order = new Order($invoice->id_order);
+        $payments = $order->getOrderPayments();
+        if(count($payments) === 0)
+        {
+            return "";
+        }
+
+        $transactionId = $payments[0]->transaction_id;
+        $paymentType = $payments[0]->card_brand;
+        $truncatedCardNumber = $payments[0]->card_number;
+
+        $formattedCardnumber = BamboraHelpers::formatTruncatedCardnumber($truncatedCardNumber);
+
+        $result = '<table>';
+        $result .= '<tr><td colspan="2"><strong>'.$this->l('Payment information').'</strong></td></tr>';
+        $result .= '<tr><td>'.$this->l('Transaction id').':</td><td>' .$transactionId .'</td></tr>';
+        $result .= '<tr><td>'.$this->l('Payment type').':</td><td>' .$paymentType .'</td></tr>';
+        $result .= '<tr><td>'.$this->l('Card number').':</td><td>' .$formattedCardnumber .'</td></tr>';
+        $result .= '</table>';
+
+        return $result;
+    }
+
+    #endregion
+
+    #region General
+
+    /**
+     * Get Api Key
+     *
+     * @return string
+     */
+    private function getApiKey()
+    {
+        if(empty($this->_apiKey))
+        {
+            $this->_apiKey = BamboraHelpers::generateApiKey();
+        }
+
+        return $this->_apiKey;
+    }
+
+    /**
+     * Get Ps Version
+     *
+     * @return string
+     */
+    public function getPsVersion()
+    {
+        if(_PS_VERSION_ < "1.6.0.0")
+        {
+            return $this::V15;
+        }
+        elseif(_PS_VERSION_ >= "1.6.0.0" && _PS_VERSION_ < "1.7.0.0")
+        {
+            return $this::V16;
+        }
+        else
+        {
+            return $this::V17;
+        }
+    }
+
+    #endregion
 }

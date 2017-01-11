@@ -1,0 +1,19 @@
+﻿{
+  "name": "bambora/module-payment-prestashop",
+  "description": "PrestaShop payment module for Bambora Online",
+  "homepage": "http://www.bambora.com/sv/se/betalningslosningar/",
+  "license": "OSL-3.0",
+  "authors": [
+    {
+      "name": "Bambora",
+      "email": "support@bambora.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.6.0"
+  },
+  "config": {
+    "preferred-install": "dist"
+  },
+  "type": "prestashop-module"
+}

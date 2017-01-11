@@ -314,17 +314,9 @@ a.bambora_cancel {
     font-size: 14px; 
 }
 
-.bambora-compleated-container .icon-check {
-    color: green;
-    font-size: 50px;
-    display: inline-block;
-}
 
-.bambora-compleated-container #bambora_completed_payment {
-    font-size: 18px;
-    color: #000;
-    display:inline-block;
-}
+
+
 
 
 #bambora_inline,
@@ -413,32 +405,21 @@ a.bambora_cancel {
     
 }
 
-
-
-
-.bambora_paymentwindow_container p.payment_module a.bambora_payment_content {
-    background: url("https://d3r1pwhfz7unl9.cloudfront.net/bambora/bambora_mini_rgb.png");
-    background-repeat: no-repeat;
-    background-position: 0 20px;
-    background-size: auto;
-    background-origin: padding-box;
-    background-clip: border-box;
-    background-color: rgb(251,251,251);
-    padding-right: 0px !important;
+.bambora_operations_title {
+   border-bottom:1pt solid #d3d8db; 
 }
 
+.bambora_operations_table tr:nth-child(even) {
+    background: #f4f8fb
+}
+.bambora_operations_table th {
+     background: #fff
+}
 
-    /*media all*/
-    .bambora_paymentwindow_container p.payment_module a.bambora_payment_content::after {
-        display: block;
-        content: "\f054";
-        position: absolute;
-        right: 15px;
-        margin-top: -11px;
-        top: 50%;
-        font-family: "FontAwesome";
-        font-size: 25px;
-        height: 22px;
-        width: 14px;
-        color: #777;
-    }
+#divBamboraTransactionControlsContainer{
+        background-color: #E1EBF5;
+}
+
+#bambora-format-error {
+    display: none;
+}

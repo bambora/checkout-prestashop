@@ -1,0 +1,46 @@
+﻿
+.bambora_paymentlogos_new img {
+    width: 45px;
+    margin-left: -6px;
+}
+.bambora_paymentlogos img {
+    width: 45px;
+}
+
+.bambora-compleated-container #bambora_completed_payment {
+    font-size: 18px;
+    color: #000;
+    display: inline-block;
+}
+
+.bambora-compleated-container .icon-check {
+    color: green;
+    font-size: 50px;
+    display: inline-block;
+}
+
+
+.payment_module .bamboracheckout {
+    background: url("https://d3r1pwhfz7unl9.cloudfront.net/bambora/bambora_mini_rgb.png");
+    background-repeat: no-repeat;
+    background-position: 0 15px;
+    background-size: auto;
+    background-origin: padding-box;
+    background-clip: border-box;
+    background-color: rgb(251,251,251);
+}
+
+/*media all*/
+.payment_module .bamboracheckout::after {
+        display: block;
+        content: "\f054";
+        position: absolute;
+        right: 15px;
+        margin-top: -11px;
+        top: 50%;
+        font-family: "FontAwesome";
+        font-size: 25px;
+        height: 22px;
+        width: 14px;
+        color: #777;
+}

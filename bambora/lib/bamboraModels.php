@@ -1,4 +1,18 @@
 <?php
+/**
+ * 888                             888
+ * 888                             888
+ * 88888b.   8888b.  88888b.d88b.  88888b.   .d88b.  888d888  8888b.
+ * 888 "88b     "88b 888 "888 "88b 888 "88b d88""88b 888P"       "88b
+ * 888  888 .d888888 888  888  888 888  888 888  888 888     .d888888
+ * 888 d88P 888  888 888  888  888 888 d88P Y88..88P 888     888  888
+ * 88888P"  "Y888888 888  888  888 88888P"   "Y88P"  888     "Y888888
+ *
+ * @category    Online Payment Gatway
+ * @package     Bambora_Online
+ * @author      Bambora Online
+ * @copyright   Bambora (http://bambora.com)
+ */
 class BamboraCustomer
 {
     public $email;
@@ -7,11 +21,11 @@ class BamboraCustomer
 }
 class BamboraOrder
 {
-    public $billingaddress; 
+    public $billingaddress;
     public $currency;
     public $lines;
     public $ordernumber;
-    public $shippingaddress;        
+    public $shippingaddress;
     public $total;
     public $vatamount;
 }
@@ -35,7 +49,7 @@ class BamboraOrderLine
     public $totalprice;
     public $totalpriceinclvat;
     public $totalpricevatamount;
-    public $unit; 
+    public $unit;
     public $vat;
 }
 class BamboraUrl
@@ -56,11 +70,10 @@ class BamboraUiMessage
 }
 class BamboraCheckoutRequest
 {
-    public $capturemulti;
-    public $customer; 
+    public $customer;
     public $instantcaptureamount;
     public $language;
-    public $order; 
+    public $order;
     public $url;
     public $paymentwindowid;
 }
