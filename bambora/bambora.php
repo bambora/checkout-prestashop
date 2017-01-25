@@ -28,7 +28,7 @@ class Bambora extends PaymentModule
     private $_apiKey;
 
     const MODULE_NAME = 'bambora';
-    const MODULE_VERSION = '1.5.0';
+    const MODULE_VERSION = '1.5.1';
     const MODULE_AUTHOR = 'Bambora';
 
     const V15 = '15';
@@ -250,7 +250,17 @@ class Bambora extends PaymentModule
                     'size' => 40,
                     'required' => false
                 ),
-
+                array(
+                    'type' => 'select',
+                    'label' => 'Window state',
+                    'name' => 'BAMBORA_WINDOWSTATE',
+                    'required' => false,
+                    'options' => array(
+                       'query' => $windowstate_options,
+                       'id' => 'type',
+                       'name' => 'name'
+                    )
+                ),
                 array(
                     'type' => 'switch',
                     'label' => 'Instant capture',
@@ -261,8 +271,16 @@ class Bambora extends PaymentModule
                 ),
                 array(
                   'type' => 'switch',
-                    'label' => 'Immediateredirect',
+                    'label' => 'Immediate Redirect',
                     'name' => 'BAMBORA_IMMEDIATEREDIRECTTOACCEPT',
+                    'required' => false,
+                    'is_bool' => true,
+                    'values' => $switch_options
+                ),
+                array(
+                  'type' => 'switch',
+                    'label' => 'Add Surcharge',
+                    'name' => 'BAMBORA_ADDFEETOSHIPPING',
                     'required' => false,
                     'is_bool' => true,
                     'values' => $switch_options
@@ -274,27 +292,7 @@ class Bambora extends PaymentModule
                     'required' => false,
                     'is_bool' => true,
                     'values' => $switch_options
-                ),
-                array(
-                  'type' => 'switch',
-                    'label' => 'Add surcharge fee to shipping',
-                    'name' => 'BAMBORA_ADDFEETOSHIPPING',
-                    'required' => false,
-                    'is_bool' => true,
-                    'values' => $switch_options
-                ),
-                array(
-                    'type' => 'select',
-                    'label' => 'Display window as',
-                    'name' => 'BAMBORA_WINDOWSTATE',
-                    'required' => false,
-                    'options' => array(
-                       'query' => $windowstate_options,
-                       'id' => 'type',
-                       'name' => 'name'
-                    )
                 )
-
             ),
             'submit' => array(
                 'title' => $this->l('Save'),
@@ -376,64 +374,67 @@ class Bambora extends PaymentModule
     {
         $html = '<div class="panel helpContainer">
                         <H3>Help for settings</H3>
+                        <p>Detailed description of these settings are to be found <a href="http://dev.bambora.com/carts.html#prestashop" target="_blank">here</a>.</p>
+                        <br/>
                         <div>
                             <H5>Activate module</H5>
-                            <p>Set to "Yes" to enable Bambora payments.<br/>If set to "No", the Bambora payment option will not be visible to your customers</p>
+                            <p>Set to Yes to allow your customers to use Bambora Checkout as a payment option.</p>
                         </div>
                         <br/>
                         <div>
                             <H5>Merchant number</H5>
-                            <p>Get your Merchant number from the <a href="https://admin.epay.eu/" target="_blank">Bambora Administration</a> via Settings > Merchant numbers. If you haven\'t got a Merchant number, please contact <a href="http://www.bambora.com/" target="_blank">Bambora</a> to get one.</p>
+                            <p>The number identifying your Bambora merchant account.</p>
                             <p><b>Note: </b>This field is mandatory to enable payments</p>
                         </div>
                         <br/>
                         <div>
                             <H5>Access token</H5>
-                            <p>Get your Access token from the <a href="https://admin.epay.eu/" target="_blank"> Bambora Administration</a> via Settings > API users. Copy the Access token from the API user into this field</p>
+                            <p>The Access token for the API user received from the Bambora administration.</p>
                             <p><b>Note:</b> This field is mandatory in order to enable payments</p>
                         </div>
                         <br/>
                         <div>
                             <H5>Secret token</H5>
-                            <p>Get your Secret token from the <a href="https://admin.epay.eu/" target="_blank">Bambora Administration</a> via Settings > API users. The secret token is only displayed once when an API user is created! Please save this token in a safe place as Bambora will not be able to recover it.</p>
+                            <p>The Secret token for the API user received from the Bambora administration.</p>
                             <p><b>Note: </b>This field is mandatory in order to enable payments.</p>
                         </div>
                         <br/>
                         <div>
                             <H5>MD5 Key</H5>
-                            <p>We recommend using MD5 to secure the data sent between your system and Bambora.<br/>If you have generated a MD5 key in the <a href="https://admin.epay.eu/" target="_blank">Bambora Administration</a> via Settings > Edit merchant, you have to enter the MD5 key here as well.</p>
-                            <p><b>Note: </b>The keys must be identical in the two systems.</p>
+                            <p>The MD5 key is used to stamp data sent between Magento and Bambora to prevent it from being tampered with.</p>
+                            <p><b>Note: </b>The MD5 key is optional but if used here, must be the same as in the Bambora administration.</p>
                         </div>
                         <br/>
                         <div>
                             <H5>Payment Window ID</H5>
-                            <p>Choose which payment window to use. You can create multiple payment windows in the <a href="https://admin.epay.eu/" target="_blank">Bambora Administration</a> via Settings > Payment windows. </p>
+                            <p>The ID of the payment window to use.</p>
+                        </div>
+                        <br/>
+                        <div>
+                            <H5>Window state</H5>
+                            <p>Please select if you want the Payment window shown as an overlay or as full screen</p>
                         </div>
                         <br/>
                         <div>
                             <H5>Instant capture</H5>
-                            <p>Enable this to capture the payment immediately. <br/> You should only use this setting, if your customer receives the goods immediately e.g. via downloads or services.</p>
+                            <p>Capture the payments at the same time they are authorized. In some countries, this is only permitted if the consumer receives the products right away Ex. digital products.</p>
                         </div>
                         <br/>
                         <div>
-                            <H5>Immediateredirect</H5>
-                            <p>Please select if you to go directly to the order confirmation page when payment is completed</p>
+                            <H5>Immediate Redirect</H5>
+                            <p>Immediately redirect your customer back to you shop after the payment completed.</p>
                         </div>
                         <br/>
+                        <div>
+                            <H5>Add Surcharge</H5>
+                            <p>Enable this if you want the payment surcharge to be added to the shipping and handling fee</p>
+                        </div>
+                        </br>
                         <div>
                             <H5>Only show payment logos at checkout</H5>
-                            <p>By enabling this the text will disappear from the payment option</p>
+                            <p>Set to diable the title text and only display payment logos at checkout</p>
                         </div>
                         <br/>
-                        <div>
-                            <H5>Add Surcharge fee to shipping</H5>
-                            <p>Enable this if you want the payment surcharge fee to be added to the shipping and handling fee</p>
-                        </div>
-                        <br/>
-                        <div>
-                            <H5>Display window as</H5>
-                            <p>Please select if you want the Payment window shown as an overlay or as full screen</p>
-                        </div>
                    </div>';
 
         return $html;
