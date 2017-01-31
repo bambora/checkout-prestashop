@@ -1,6 +1,15 @@
+{*
+* Bambora Online 2017
+*
+* @author    Bambora Online
+* @copyright Bambora (http://bambora.com)
+* @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+*
+*}
+
 <div class="bambora_paymentwindow_container">
 
-  <script type="text/javascript" >
+  <script type="text/javascript">
 
     (function (n, t, i, r, u, f, e) { n[u] = n[u] || function() {
     (n[u].q = n[u].q || []).push(arguments)}; f = t.createElement(i);
@@ -8,7 +17,7 @@
     })(window, document, "script", "{$bamboraPaymentwindowUrl|escape:'htmlall':'UTF-8'}", "bam");
 
     var options = {
-    'windowstate': {$bamboraWindowState},
+    'windowstate': {$bamboraWindowState|escape:'htmlall':'UTF-8'},
     }
 
     function openPaymentWindow(url)
@@ -24,7 +33,7 @@
       <span class="bambora_paymentlogos">
         {if $bamboraPaymentCardIds|@count gt 0}
         {foreach from=$bamboraPaymentCardIds key=k item=v}
-        <img src="{'https://d3r1pwhfz7unl9.cloudfront.net/paymentlogos/cardid.png'|replace:'cardid': $v}"/>
+        <img src="{'https://d3r1pwhfz7unl9.cloudfront.net/paymentlogos/cardid.png'|replace:'cardid':$v|escape:'htmlall':'UTF-8'}"/>
         {/foreach}
         {/if}
       </span>

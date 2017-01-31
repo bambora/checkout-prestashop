@@ -1,9 +1,16 @@
 <?php
+/**
+ * Bambora Online 2017
+ *
+ * @author    Bambora Online
+ * @copyright Bambora (http://bambora.com)
+ * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ */
 
 global $_MODULE;
 $_MODULE = array();
 $_MODULE['<{bambora}prestashop>bambora_46e553fd0fdfe6d82fc064999602f4ae'] = 'Use Bambora Checkout payment gateway to accept payments for your products online';
-$_MODULE['<{bambora}prestashop>bambora_2efd0e7e3862d1c085c4305007ce8446'] = 'is required. If you don\'t have one please contact Bambora in order to obtain one!';
+$_MODULE['<{bambora}prestashop>bambora_952c5913e2e4d09e8c50f720da573f5a'] = 'is required. If you do not have one please contact Bambora in order to obtain one!';
 $_MODULE['<{bambora}prestashop>bambora_c888438d14855d7d96a2724ee9c306bd'] = 'Settings updated';
 $_MODULE['<{bambora}prestashop>bambora_f4f70727dc34561dfde1a3c529b6205c'] = 'Settings';
 $_MODULE['<{bambora}prestashop>bambora_c9cc8cce247e49bae79f15173ce97354'] = 'Save';
@@ -40,15 +47,3 @@ $_MODULE['<{bambora}prestashop>bambora_1ab1dfd9dc24ea4729d6c032f7f0342d'] = 'Pay
 $_MODULE['<{bambora}prestashop>bambora_8b446bd19daeb8978683f76a7e47b007'] = 'Transaction id';
 $_MODULE['<{bambora}prestashop>bambora_4dbcb38bbbff5d4a402f2575c57a35e6'] = 'Payment type';
 $_MODULE['<{bambora}prestashop>bambora_a44217022190f5734b2f72ba1e4f8a79'] = 'Card number';
-$_MODULE['<{bambora}prestashop>payment_e2b7dec8fa4b498156dfee6e4c84b156'] = 'This payment method is not available.';
-$_MODULE['<{bambora}prestashop>bamboracheckout17_467519aa2e08d08948bf583efba8cdf4'] = 'Thank you for using Bambora Checkout';
-$_MODULE['<{bambora}prestashop>bamboracheckout17_25e8f2fd2871c8423bbe4e254066cd98'] = 'Please wait...';
-$_MODULE['<{bambora}prestashop>bamboracheckout_60708442cbc2e0de4e8e0daa05355cce'] = 'Pay using Bambora Checkout';
-$_MODULE['<{bambora}prestashop>checkoutissue_60708442cbc2e0de4e8e0daa05355cce'] = ' Pay using Bambora Checkout';
-$_MODULE['<{bambora}prestashop>checkoutissue_2fbc0ede2d7fc90bf3a705f1464016f4'] = 'An issue occured';
-$_MODULE['<{bambora}prestashop>paymenterror17_cb06d02bb15602bbfe360b853d7bcede'] = 'Your payment failed because of';
-$_MODULE['<{bambora}prestashop>paymenterror17_aa422ac7191488238abd6ab1e7230151'] = 'Please contact the shop to correct the error and complete your payment.';
-$_MODULE['<{bambora}prestashop>paymenterror_cb06d02bb15602bbfe360b853d7bcede'] = ' Your payment failed because of';
-$_MODULE['<{bambora}prestashop>paymenterror_aa422ac7191488238abd6ab1e7230151'] = 'Please contact the shop to correct the error and complete your payment.';
-$_MODULE['<{bambora}prestashop>paymentinfo_078b3875e79ed6ee5537b1b353e00861'] = 'You have chosen to pay for the order online. Once you have completed your order, you will be transferred to the Bambora Checkout. Here you need to process your payment. Once payment is completed, you will automatically be returned to our shop.';
-$_MODULE['<{bambora}prestashop>paymentinfo_60708442cbc2e0de4e8e0daa05355cce'] = 'Pay using Bambora Checkout';

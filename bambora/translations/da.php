@@ -1,4 +1,11 @@
 <?php
+/**
+ * Bambora Online 2017
+ *
+ * @author    Bambora Online
+ * @copyright Bambora (http://bambora.com)
+ * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ */
 
 global $_MODULE;
 $_MODULE = array();

@@ -1,62 +1,60 @@
 <?php
 /**
- * 888                             888
- * 888                             888
- * 88888b.   8888b.  88888b.d88b.  88888b.   .d88b.  888d888  8888b.
- * 888 "88b     "88b 888 "888 "88b 888 "88b d88""88b 888P"       "88b
- * 888  888 .d888888 888  888  888 888  888 888  888 888     .d888888
- * 888 d88P 888  888 888  888  888 888 d88P Y88..88P 888     888  888
- * 88888P"  "Y888888 888  888  888 88888P"   "Y88P"  888     "Y888888
+ * Bambora Online 2017
  *
- * @category    Online Payment Gatway
- * @package     Bambora_Online
- * @author      Bambora Online
- * @copyright   Bambora (http://bambora.com)
+ * @author    Bambora Online
+ * @copyright Bambora (http://bambora.com)
+ * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  */
+
 class BamboraCurrency
 {
     /**
      * Convert Price To MinorUnits
-     * 
-     * @param mixed $amount 
-     * @param mixed $minorUnits 
-     * @param mixed $defaultMinorUnits 
+     *
+     * @param mixed $amount
+     * @param mixed $minorUnits
+     * @param mixed $defaultMinorUnits
      * @return double|integer
      */
     public static function convertPriceToMinorUnits($amount, $minorUnits, $defaultMinorUnits = 2)
     {
-        if($minorUnits == "" || $minorUnits == null)
+        if ($minorUnits == "" || $minorUnits == null) {
             $minorUnits = $defaultMinorUnits;
+        }
 
-        if($amount == "" || $amount == null)
+        if ($amount == "" || $amount == null) {
             return 0;
+        }
 
-        return round($amount,$minorUnits) * pow(10,$minorUnits);
+        return round($amount, $minorUnits) * pow(10, $minorUnits);
     }
 
     /**
      * Convert Price From MinorUnits
-     * 
-     * @param mixed $amount 
-     * @param mixed $minorUnits 
-     * @param mixed $defaultMinorUnits 
+     *
+     * @param mixed $amount
+     * @param mixed $minorUnits
+     * @param mixed $defaultMinorUnits
      * @return double|integer
      */
     public static function convertPriceFromMinorUnits($amount, $minorUnits, $defaultMinorUnits = 2)
     {
-        if($minorUnits == "" || $minorUnits == null)
+        if ($minorUnits == "" || $minorUnits == null) {
             $minorUnits = $defaultMinorUnits;
+        }
 
-        if($amount == "" || $amount == null)
+        if ($amount == "" || $amount == null) {
             return 0;
+        }
 
-        return $amount / pow(10,$minorUnits);
+        return $amount / pow(10, $minorUnits);
     }
 
     /**
      * Get Currency MinorUnits
-     * 
-     * @param mixed $currencyCode 
+     *
+     * @param mixed $currencyCode
      * @return integer
      */
     public static function getCurrencyMinorunits($currencyCode)

@@ -1,10 +1,17 @@
-﻿$(document).ready(function () {
+/**
+ * Bambora Online 2017
+ *
+ * @author    Bambora Online
+ * @copyright Bambora (http://bambora.com)
+ * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ */
+
+$(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
 
     $("#bamboraSpinner").hide();
 
     if ($("#bambora_overlay").length > 0) {
-
         $("a#bambora_inline").fancybox({
             "scrolling": false,
             "transitionIn": "elastic",
@@ -17,7 +24,6 @@
             "helpers": {
                 "overlay": { "closeClick": true }
             }
-
         });
 
         $("a#bambora_inline").trigger("click");
@@ -32,7 +38,6 @@
     }
 
     function createTransactionControl(control) {
-
         $("#bamboraSpinner").hide();
         var firstDivChild = control.children("div:first");
         var firstButton = firstDivChild.children("div:first").children("input:first");
@@ -87,7 +92,6 @@
                 }
             }
         });
-
     }
 
     function hideAllButtons() {

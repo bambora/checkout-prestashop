@@ -1,4 +1,11 @@
-﻿
+/**
+ * Bambora Online 2017
+ *
+ * @author    Bambora Online
+ * @copyright Bambora (http://bambora.com)
+ * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ */
+
 .bambora_logo {
     width: 75%;
     max-width: 300px;
@@ -17,7 +24,7 @@
 
 .bambora-table {
     width: 100%;
-} 
+}
 
     .bambora-table th {
         padding: 0 24px 2px 0;
@@ -37,7 +44,6 @@
     font-weight: normal;
     color: silver;
 }
-
 
 bambora-badge-critical {
     background-color: #E08F95;
@@ -63,7 +69,6 @@ bambora-badge-critical {
 .clearfix:after {
     clear: both;
 }
-
 
 .bambora_floatLeft {
     float: left;
@@ -182,7 +187,6 @@ bambora-badge-critical {
     text-decoration: underline;
 }
 
-
 .bambora_paymentCardLogo {
     height: 20px;
     vertical-align: middle;
@@ -205,12 +209,9 @@ bambora-badge-critical {
     padding-bottom: 5px;
 }
 
-
-
 .bambora-spinner body {
     background-color: gray;
 }
-
 
 @-webkit-keyframes rotate {
     from {
@@ -239,7 +240,6 @@ bambora-badge-critical {
         transform: rotate(360deg);
     }
 }
-
 
 div.bambora-spinner {
     background-color: silver;
@@ -298,7 +298,6 @@ a.bambora_cancel {
     width: 80%;
     display: inline-block;
     vertical-align: middle;
-    
 }
 #bambora_overlay_message_container p {
     margin-top: 4px;
@@ -311,19 +310,13 @@ a.bambora_cancel {
 #bambora_overlay_message_title,
 #bambora_overlay_message_title_with_message {
     font-weight: bold;
-    font-size: 14px; 
+    font-size: 14px;
 }
-
-
-
-
-
 
 #bambora_inline,
 #bambora_overlay {
     display: none;
 }
-
 
 .bambora-checkmark,
 .bambora-exclamation {
@@ -365,7 +358,7 @@ a.bambora_cancel {
     position: relative;
     left: 13px;
     top: 6px;
-    
+
     /*Make it a small rectangle so the border will create an L-shape*/
     width: 9px;
     height: 20px;
@@ -402,11 +395,10 @@ a.bambora_cancel {
     -moz-border-radius: 25px;
     -webkit-border-radius: 25px;
     border-radius: 25px;
-    
 }
 
 .bambora_operations_title {
-   border-bottom:1pt solid #d3d8db; 
+   border-bottom:1pt solid #d3d8db;
 }
 
 .bambora_operations_table tr:nth-child(even) {

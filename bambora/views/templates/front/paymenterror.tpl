@@ -1,4 +1,13 @@
-﻿<div>
+{*
+* Bambora Online 2017
+*
+* @author    Bambora Online
+* @copyright Bambora (http://bambora.com)
+* @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+*
+*}
+
+<div>
   <p class="alert alert-warning warning">
     {l s='Your payment failed because of' mod='bambora'} <strong>"{$paymenterror|escape:'htmlall':'UTF-8'}"</strong>
     <br/>
