@@ -1,10 +1,16 @@
 <?php
 /**
- * Bambora Online 2017
+ * Copyright (c) 2017. All rights reserved Bambora Online A/S.
  *
- * @author    Bambora Online
+ * This program is free software. You are allowed to use the software but NOT allowed to modify the software.
+ * It is also not legal to do any changes to the software and distribute it in your own name / brand.
+ *
+ * All use of the payment modules happens at your own risk. We offer a free test account that you can use to test the module.
+ *
+ * @author    Bambora Online A/S
  * @copyright Bambora (http://bambora.com)
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ *
  */
 
 abstract class BaseAction extends ModuleFrontController
@@ -100,28 +106,24 @@ abstract class BaseAction extends ModuleFrontController
                 $minorUnits = $bamboraTransactionInfo["currency"]["minorunits"];
                 $amountInMinorUnits = $bamboraTransactionInfo["total"]["authorized"];
                 $feeAmountInMinorUnits = $bamboraTransactionInfo["total"]["feeamount"];
-                if ($feeAmountInMinorUnits > 0) {
-                    $amountInMinorUnits = $amountInMinorUnits - $feeAmountInMinorUnits;
-                }
-
-                $amount = BamboraCurrency::convertPriceFromMinorUnits($amountInMinorUnits, $minorUnits);
+                $transactionfee = $feeAmountInMinorUnits > 0 ? BamboraCurrency::convertPriceFromMinorUnits($feeAmountInMinorUnits, $minorUnits) : 0;
+                $totalAmount = BamboraCurrency::convertPriceFromMinorUnits($amountInMinorUnits, $minorUnits);
+                $amountWithoutFee = $totalAmount - $transactionfee;
 
                 $paymentMethod = $this->module->displayName . ' ('. $paymentType .')';
                 $id_cart = $cart->id;
 
-                if ($this->module->validateOrder((int)$id_cart, Configuration::get('PS_OS_PAYMENT'), $amount, $paymentMethod, null, $mailVars, $currencyid, false, $cart->secure_key)) {
+                if ($this->module->validateOrder((int)$id_cart, Configuration::get('PS_OS_PAYMENT'), $amountWithoutFee, $paymentMethod, null, $mailVars, $currencyid, false, $cart->secure_key)) {
                     $id_order = Order::getOrderByCartId($id_cart);
                     $order = new Order($id_order);
                     $payment = $order->getOrderPayments();
                     $payment[0]->transaction_id = $transactionId;
-                    $payment[0]->amount = $amount;
+                    $payment[0]->amount = $totalAmount;
                     $payment[0]->card_number = $truncatedCardNumber;
                     $payment[0]->card_brand = $paymentType;
-
+                    $payment[0]->save();
                     if ($feeAmountInMinorUnits > 0) {
                         if (Configuration::get('BAMBORA_ADDFEETOSHIPPING')) {
-                            $transactionfee = BamboraCurrency::convertPriceFromMinorUnits($feeAmountInMinorUnits, $minorUnits);
-
                             $order->total_paid = $order->total_paid + $transactionfee;
                             $order->total_paid_tax_incl = $order->total_paid_tax_incl + $transactionfee;
                             $order->total_paid_tax_excl = $order->total_paid_tax_excl + $transactionfee;
@@ -131,16 +133,16 @@ abstract class BaseAction extends ModuleFrontController
                             $order->total_shipping_tax_excl = $order->total_shipping_tax_excl + $transactionfee;
                             $order->save();
 
-                            $invoice = $payment[0]->getOrderInvoice($order->id);
-                            $invoice->total_paid_tax_incl = $invoice->total_paid_tax_incl + $transactionfee;
-                            $invoice->total_paid_tax_excl = $invoice->total_paid_tax_excl + $transactionfee;
-                            $invoice->total_shipping_tax_incl = $invoice->total_shipping_tax_incl + $transactionfee;
-                            $invoice->total_shipping_tax_excl = $invoice->total_shipping_tax_excl + $transactionfee;
-
-                            $invoice->save();
+                            $invoice = new OrderInvoice($order->invoice_number);
+                            if (isset($invoice->id)) {
+                                $invoice->total_paid_tax_incl = $invoice->total_paid_tax_incl + $transactionfee;
+                                $invoice->total_paid_tax_excl = $invoice->total_paid_tax_excl + $transactionfee;
+                                $invoice->total_shipping_tax_incl = $invoice->total_shipping_tax_incl + $transactionfee;
+                                $invoice->total_shipping_tax_excl = $invoice->total_shipping_tax_excl + $transactionfee;
+                                $invoice->save();
+                            }
                         }
                     }
-                    $payment[0]->save();
                     $message = "Order created";
                     $responseCode = 200;
                 } else {

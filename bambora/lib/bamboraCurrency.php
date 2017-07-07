@@ -1,14 +1,24 @@
 <?php
 /**
- * Bambora Online 2017
+ * Copyright (c) 2017. All rights reserved Bambora Online A/S.
  *
- * @author    Bambora Online
+ * This program is free software. You are allowed to use the software but NOT allowed to modify the software.
+ * It is also not legal to do any changes to the software and distribute it in your own name / brand.
+ *
+ * All use of the payment modules happens at your own risk. We offer a free test account that you can use to test the module.
+ *
+ * @author    Bambora Online A/S
  * @copyright Bambora (http://bambora.com)
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ *
  */
 
 class BamboraCurrency
 {
+    const ROUND_UP = "round_up";
+    const ROUND_DOWN = "round_down";
+    const ROUND_DEFAULT = "round_default";
+
     /**
      * Convert Price To MinorUnits
      *
@@ -17,17 +27,25 @@ class BamboraCurrency
      * @param mixed $defaultMinorUnits
      * @return double|integer
      */
-    public static function convertPriceToMinorUnits($amount, $minorUnits, $defaultMinorUnits = 2)
+    public static function convertPriceToMinorUnits($amount, $minorUnits, $rounding)
     {
-        if ($minorUnits == "" || $minorUnits == null) {
-            $minorUnits = $defaultMinorUnits;
-        }
-
         if ($amount == "" || $amount == null) {
             return 0;
         }
 
-        return round($amount, $minorUnits) * pow(10, $minorUnits);
+        switch ($rounding) {
+            case BamboraCurrency::ROUND_UP:
+                $amount = ceil($amount * pow(10, $minorUnits));
+                break;
+            case BamboraCurrency::ROUND_DOWN:
+                $amount = floor($amount * pow(10, $minorUnits));
+                break;
+            default:
+                $amount = round($amount * pow(10, $minorUnits));
+                break;
+        }
+
+        return $amount;
     }
 
     /**
@@ -35,20 +53,15 @@ class BamboraCurrency
      *
      * @param mixed $amount
      * @param mixed $minorUnits
-     * @param mixed $defaultMinorUnits
-     * @return double|integer
+     * @return string
      */
-    public static function convertPriceFromMinorUnits($amount, $minorUnits, $defaultMinorUnits = 2)
+    public static function convertPriceFromMinorUnits($amount, $minorUnits, $decimal_seperator = '.')
     {
-        if ($minorUnits == "" || $minorUnits == null) {
-            $minorUnits = $defaultMinorUnits;
-        }
-
-        if ($amount == "" || $amount == null) {
+        if (!isset($amount)) {
             return 0;
         }
 
-        return $amount / pow(10, $minorUnits);
+        return number_format($amount / pow(10, $minorUnits), $minorUnits, $decimal_seperator, '');
     }
 
     /**

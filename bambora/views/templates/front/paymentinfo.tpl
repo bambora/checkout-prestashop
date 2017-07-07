@@ -1,23 +1,28 @@
 {*
-* Bambora Online 2017
+* Copyright (c) 2017. All rights reserved Bambora Online A/S.
 *
-* @author    Bambora Online
+* This program is free software. You are allowed to use the software but NOT allowed to modify the software.
+* It is also not legal to do any changes to the software and distribute it in your own name / brand.
+*
+* All use of the payment modules happens at your own risk. We offer a free test account that you can use to test the module.
+*
+* @author    Bambora Online A/S
 * @copyright Bambora (http://bambora.com)
 * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
 *
 *}
 
 <section>
-  {if $onlyShowLogoes != true}
-  <p>{l s='You have chosen to pay for the order online. Once you have completed your order, you will be transferred to the Bambora Checkout. Here you need to process your payment. Once payment is completed, you will automatically be returned to our shop.' mod='bambora'}</p>
-  {/if}
-  <span class="bambora_paymentlogos_new">
-    {if $paymentCardIds|@count gt 0}
-    {foreach from=$paymentCardIds key=k item=v}
-    <img src="{'https://d3r1pwhfz7unl9.cloudfront.net/paymentlogos/cardid.png'|replace:'cardid': $v|escape:'htmlall':'UTF-8'}"/>
-    {/foreach}
-    {else}
-    {l s='Pay using Bambora Checkout' mod='bambora'}
-    {/if}
-  </span>
+	<div class="bambora_section_container">
+		{if $onlyShowLogoes != true}
+			<p class="bambora_section_text">{l s='You have chosen to pay for the order online. Once you have completed your order, you will be transferred to the Bambora Online Checkout. Here you need to process your payment. Once payment is completed, you will automatically be returned to our shop.' mod='bambora'}</p>
+		{/if}
+		<div class="bambora_paymentlogos">
+			{if $paymentCardIds|@count gt 0}
+				{foreach from=$paymentCardIds key=k item=v}
+					<img src="{'https://d3r1pwhfz7unl9.cloudfront.net/paymentlogos/cardid.png'|replace:'cardid': $v|escape:'htmlall':'UTF-8'}"/>
+				{/foreach}
+			{/if}
+		</div>
+	</div>
 </section>

@@ -1,63 +1,55 @@
 /**
- * Bambora Online 2017
+ * Copyright (c) 2017. All rights reserved Bambora Online A/S.
  *
- * @author    Bambora Online
+ * This program is free software. You are allowed to use the software but NOT allowed to modify the software.
+ * It is also not legal to do any changes to the software and distribute it in your own name / brand.
+ *
+ * All use of the payment modules happens at your own risk. We offer a free test account that you can use to test the module.
+ *
+ * @author    Bambora Online A/S
  * @copyright Bambora (http://bambora.com)
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ *
  */
 
-.bambora_logo {
-    width: 75%;
+.bambora-table {
+    width: 100%;
+}
+
+.bambora-table th {
+    padding: 0 24px 2px 0;
+    font-weight: bold;
+}
+
+.bambora-table td {
+    white-space: nowrap;
+    width: 50%;
+    padding: 5px;
+    border-bottom: solid 1px #eee;
+}
+
+.bambora-logo {
+    width: 100%;
     max-width: 300px;
 }
 
 .bambora-buttons {
     background-color: #FCFDFE;
     border: 1px solid #e1ebf5;
+    -ms-border-radius: 4px;
     border-radius: 4px;
     padding: 4px;
 }
 
-.bambora-transaction-log {
-    margin-top: 40px;
-}
-
-.bambora-table {
-    width: 100%;
-}
-
-    .bambora-table th {
-        padding: 0 24px 2px 0;
-        font-weight: bold;
-    }
-
-    .bambora-table td {
-        white-space: nowrap;
-         width: 50%;
-    padding: 6px 24px 6px 0;
-    border-bottom: solid 1px #eee;
-    }
-
-.bambora-td-head {
-    width: 50%;
-    padding: 6px 24px 2px 0;
-    font-weight: normal;
-    color: silver;
-}
-
-bambora-badge-critical {
-    background-color: #E08F95;
+.bambora-operations-table th,
+.bambora-operations-table td {
+    padding: 5px;
+    text-align: left;
 }
 
 .bambora-badge-big {
     font-size: 12px !important;
     padding: 0 7px 0 7px !important;
-}
-
-.bambora-col {
-    float: left;
-    width: 45%;
-    margin-right: 30px;
 }
 
 .clearfix:before,
@@ -70,51 +62,58 @@ bambora-badge-critical {
     clear: both;
 }
 
-.bambora_floatLeft {
+.bambora-float-left {
     float: left;
     margin-right: 15px;
 }
 
-.bambora_show {
+.bambora-show {
+    -ms-opacity: 1;
     opacity: 1;
     display: block;
     -webkit-transition: 1000ms cubic-bezier(0,0,0.58,1);
+    -ms-transition: 1000ms cubic-bezier(0,0,0.58,1);
+    -o-transition: 1000ms cubic-bezier(0,0,0.58,1);
     transition: 1000ms cubic-bezier(0,0,0.58,1);
 }
 
-.bambora_hidden {
+.bambora-hidden {
+    -ms-opacity: 0;
     opacity: 0;
     display: none;
 }
 
-#bambora_capture {
+#bambora-capture {
+    -webkit-transition: all 1.0s ease;
+    -moz-transition: all 1.0s ease;
+    -o-transition: all 1.0s ease;
+    -ms-transition: all 1.0s ease;
+    transition: all 1.0s ease;
+}
+
+#bambora-confirmAction {
+    -webkit-transition: all 1.0s ease;
+    -moz-transition: all 1.0s ease;
+    -o-transition: all 1.0s ease;
+    -ms-transition: all 1.0s ease;
+    transition: all 1.0s ease;
+}
+
+#bambora-acceptbtn {
     -webkit-transition: all 1.0s ease;
     -moz-transition: all 1.0s ease;
     -o-transition: all 1.0s ease;
     transition: all 1.0s ease;
 }
 
-#bambora_confirmAction {
-    -webkit-transition: all 1.0s ease;
-    -moz-transition: all 1.0s ease;
-    -o-transition: all 1.0s ease;
-    transition: all 1.0s ease;
-}
-
-#bambora_acceptbtn {
-    -webkit-transition: all 1.0s ease;
-    -moz-transition: all 1.0s ease;
-    -o-transition: all 1.0s ease;
-    transition: all 1.0s ease;
-}
-
-.bamboraButtonFrame {
+.bambora-button-frame {
     background-color: #E1EBF5;
     padding: 4px;
     height: 40px;
     vertical-align: top;
     font-weight: bold;
     white-space: nowrap;
+    -ms-border-radius: 3px;
     border-radius: 3px;
     width: 172px;
     line-height: 29px;
@@ -129,18 +128,18 @@ bambora-badge-critical {
     padding-left: 20px;
 }
 
-.bamboraButtonFrameIncreesedsize {
+.bambora-button-frame-increesed-size {
     width: 280px !important;
 }
 
-    .bamboraButtonFrameIncreesedsize div input {
+    .bambora-button-frame-increesed-size div input {
         text-align: right;
         font-weight: normal;
         width: 80px !important;
         float: right;
     }
 
-        .bamboraButtonFrameIncreesedsize div input[type='text'] {
+        .bambora-button-frame-increesed-size div input[type='text'] {
             background-color: white;
             display: inline-block;
             width: 90px;
@@ -148,56 +147,51 @@ bambora-badge-critical {
             float: left;
         }
 
-    .bamboraButtonFrameIncreesedsize div p {
+    .bambora-button-frame-increesed-size div p {
         display: inline-block;
         padding: 2px;
     }
 
-    .bamboraButtonFrameIncreesedsize div {
+    .bambora-button-frame-increesed-size div {
         text-align: left;
         font-weight: normal;
         vertical-align: bottom;
     }
 
-.bambora_confirm_btn {
+.bambora-confirm-btn {
     width: 80px;
     background-color: #72C279;
     color: #FCFDFE;
 }
 
-.bambora_credit_btn {
+.bambora-credit-btn {
     background-color: #D9BA73;
     color: #FCFDFE;
     width: 80px;
 }
 
-.bambora_delete_btn {
+.bambora-delete-btn {
     background-color: #E08F95;
     color: #FCFDFE;
     width: 80px;
 }
 
-.bambora_confirm_frame {
+.bambora-confirm-frame {
     width: 90px;
     vertical-align: middle;
     padding: 4px;
 }
 
-.bambora_cancelLink {
+.bambora-cancelLink {
     text-decoration: underline;
 }
 
-.bambora_paymentCardLogo {
-    height: 20px;
-    vertical-align: middle;
-}
-
-.bambora_widthAllSpace {
+.bambora-width-all-space {
     width: 100%;
     clear: both;
 }
 
-.bambora_displayInline {
+.bambora-displayInline {
     display: inline;
 }
 
@@ -216,14 +210,10 @@ bambora-badge-critical {
 @-webkit-keyframes rotate {
     from {
         -webkit-transform: rotate(0deg);
-        /*transform: rotate(0deg);
-      -ms-transform:rotate(-90deg)*/
     }
 
     to {
         -webkit-transform: rotate(360deg);
-        /*transform: rotate(360deg);
-    -ms-transform:rotate(0deg)*/
     }
 }
 
@@ -243,6 +233,7 @@ bambora-badge-critical {
 
 div.bambora-spinner {
     background-color: silver;
+    -ms-border-radius: 30px;
     border-radius: 30px;
     padding: 8px;
     width: 30px;
@@ -250,7 +241,7 @@ div.bambora-spinner {
     line-height: 0px;
 }
 
-    div.bambora-spinner img {
+div.bambora-spinner img {
         width: 100%;
         height: 100%;
         -moz-animation-name: rotate;
@@ -271,50 +262,51 @@ div.bambora-spinner {
         animation-timing-function: linear;
     }
 
-a.bambora_cancel {
+a.bambora-cancel {
     background: #e0e0e0 url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAYAAADEtGw7AAAAAXNSR0IArs4c6QAAAfJJREFUOBGVlT1LA0EQhnfvjEGJiIJgZW8nKH5ErYR0FqksIgiW10gUjf4BSRTTKhZik0KstRGtjMZUNhaaXxFFIkhY5z0yx5rsXTYLx87Ozjw3O7MfQmgtt5Wb0IY9iZ7nJbLZ7Cg7OSzs7RxsiJhb293eX2OdbQ9oYnD4NuYO3DNcwhlQKeUFiY5Sqklf5riYv7IBM1QKuQx7JcTrb7Ox4mL50nXuSNeHCfoBVpFOLiy9Pz0/vkEX1tqhsKNIx10ZG3PLL+V6cn6xRrp0C2oFN0EBVkpU5Vdz3cUAkSFCEq3gXaCpwnmh7oN7gdtAwfOLB4EbdgWlpERf8FMu6PfP5w2qz4Vin9by/UhZ1wHGRBickv9BDpPsjN4Ehd4IxoQJDr3ewqCwCZarO0A2FVS3iYLCLjh5uhPLyCmWz2PuKefKUeIU1Wddex8asVb96XYnKqxUQq1GHSIjWIP6x5TBiBRQjKmLPKEdqQiHiqqj5Caxm/wjgrv0lUwX1z9wFJSOaSpfPLwkcMYGHqSiG5QLZdotprT4YFsop8AGLnuFMhy96RAhTUiXE4/H+6nGQ7pDt83PtngM2nNOcw7tmxF/6+A5wbNCgylbKMPRc+SA0u3hHZ3kz/wcVyqVxuzczDVuflzSXCjdOUrmnFOkD4DC9g/n0U/UBn+1FgAAAABJRU5ErkJggg==") no-repeat scroll center center / 11px 11px;
+    -ms-border-radius: 100%;
     border-radius: 100%;
     display: inline-block;
     height: 30px;
     width: 30px;
 }
 
-    a.bambora_cancel:hover {
+a.bambora-cancel:hover {
         cursor: pointer;
         cursor: hand;
     }
 
-.bambora_overlay_data {
+.bambora-overlay-data {
     width: 500px;
     height: 100% !important;
 }
 
-#bambora_message,
-#bambora_overlay_message_container {
+#bambora-message,
+#bambora-overlay-message-container {
     height: 50%;
     min-height: 40px;
 }
-#bambora_overlay_message_container {
+#bambora-overlay-message-container {
     width: 80%;
     display: inline-block;
     vertical-align: middle;
 }
-#bambora_overlay_message_container p {
+#bambora-overlay-message-container p {
     margin-top: 4px;
 }
 
-#bambora_overlay_message_title {
+#bambora-overlay-message-title {
     line-height: 4;
 }
 
-#bambora_overlay_message_title,
-#bambora_overlay_message_title_with_message {
+#bambora-overlay-message-title,
+#bambora-overlay-message-title-with-message {
     font-weight: bold;
     font-size: 14px;
 }
 
-#bambora_inline,
-#bambora_overlay {
+#bambora-inline,
+#bambora-overlay {
     display: none;
 }
 
@@ -325,7 +317,7 @@ a.bambora_cancel {
 }
 .bambora-checkmark,
 .bambora-exclamation,
-#overlay_message_title {
+#overlay-message-title {
     position: absolute;
     top: 50%;
     -moz-transform: translateY(-50%);
@@ -336,36 +328,32 @@ a.bambora_cancel {
 }
 
 .bambora-circle {
-    /*position: relative;*/
     width: 40px;
     height: 40px;
+    -ms-border-radius: 21px;
     border-radius: 21px;
-        display: inline-block;
+    display: inline-block;
     vertical-align: middle;
     margin-right: 10px;
     margin-top: 25px;
 }
 
-.bambora-checkmark_circle {
+.bambora-checkmark-circle {
     background-color: #5cb85c;
 }
 
-.bambora-exclamation_circle {
+.bambora-exclamation-circle {
     background-color: #f0ad4e;
 }
 
-.bambora-checkmark_stem {
+.bambora-checkmark-stem {
     position: relative;
     left: 13px;
     top: 6px;
-
-    /*Make it a small rectangle so the border will create an L-shape*/
     width: 9px;
     height: 20px;
-    /*Add a white border on the bottom and left, creating that 'L' */
     border: solid #fff;
     border-width: 0 4px 4px 0;
-    /*Rotate the L 45 degrees to turn it into a checkmark*/
     -moz-transform: rotate(45deg);
     -ms-transform: rotate(45deg);
     -o-transform: rotate(45deg);
@@ -373,19 +361,20 @@ a.bambora_cancel {
     transform: rotate(45deg);
 }
 
-.bambora-exclamation_stem {
+.bambora-exclamation-stem {
     position: relative;
     width: 5px;
     height: 17px;
     background-color: #fff;
     left: 18px;
     top: 8px;
-    border-radius: 25px;
+    -ms-border-radius: 25px;
     -webkit-border-radius: 25px;
     -moz-border-radius: 25px;
+    border-radius: 25px;
 }
 
-.bambora-exclamation_dot {
+.bambora-exclamation-dot {
     position: relative;
     width: 5px;
     height: 5px;
@@ -394,21 +383,22 @@ a.bambora_cancel {
     top: 11px;
     -moz-border-radius: 25px;
     -webkit-border-radius: 25px;
+    -ms-border-radius: 25px;
     border-radius: 25px;
 }
 
-.bambora_operations_title {
-   border-bottom:1pt solid #d3d8db;
+.bambora-table-title {
+   border-bottom:1pt solid #d3d8db !important;
 }
 
-.bambora_operations_table tr:nth-child(even) {
+.bambora-operations-table tr:nth-child(even) {
     background: #f4f8fb
 }
-.bambora_operations_table th {
+.bambora-operations-table th {
      background: #fff
 }
 
-#divBamboraTransactionControlsContainer{
+#bambora-transaction-controls-container{
         background-color: #E1EBF5;
 }
 
