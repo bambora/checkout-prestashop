@@ -124,10 +124,9 @@ class Bambora extends PaymentModule
                 Configuration::updateValue('BAMBORA_ONLYSHOWPAYMENTLOGOESATCHECKOUT', Tools::getValue("BAMBORA_ONLYSHOWPAYMENTLOGOESATCHECKOUT"));
                 Configuration::updateValue('BAMBORA_ADDFEETOSHIPPING', Tools::getValue("BAMBORA_ADDFEETOSHIPPING"));
                 Configuration::updateValue('BAMBORA_CAPTUREONSTATUSCHANGED', Tools::getValue("BAMBORA_CAPTUREONSTATUSCHANGED"));
-                Configuration::updateValue('BAMBORA_CAPTUREONSTATUS', Tools::getValue("BAMBORA_CAPTUREONSTATUS"));
+                Configuration::updateValue('BAMBORA_CAPTURE_ON_STATUS', serialize(Tools::getValue("BAMBORA_CAPTURE_ON_STATUS")));
                 Configuration::updateValue('BAMBORA_AUTOCAPTURE_FAILUREEMAIL', Tools::getValue("BAMBORA_AUTOCAPTURE_FAILUREEMAIL"));
                 Configuration::updateValue('BAMBORA_ROUNDING_MODE', Tools::getValue("BAMBORA_ROUNDING_MODE"));
-
                 $output .= $this->displayConfirmation($this->l('Settings updated'));
             }
         }
@@ -157,7 +156,7 @@ class Bambora extends PaymentModule
         $statuses = OrderState::getOrderStates($this->context->language->id);
         $selectCaptureStatus = array();
         foreach ($statuses as $status) {
-            $selectCaptureStatus[] = array('type' => $status["id_order_state"], 'name' => $status["name"]);
+            $selectCaptureStatus[] = array('key' => $status["id_order_state"], 'name' => $status["name"]);
         }
         $rounding_modes = array(
             array( 'type' => BamboraCurrency::ROUND_DEFAULT, 'name' => 'Default'),
@@ -267,11 +266,13 @@ class Bambora extends PaymentModule
                 array(
                     'type' => 'select',
                     'label' => 'Capture on status changed to',
-                    'name' => 'BAMBORA_CAPTUREONSTATUS',
+                    'name' => 'BAMBORA_CAPTURE_ON_STATUS[]',
+                    'class' => 'chosen',
                     'required' => false,
+                    'multiple' => true,
                     'options' => array(
                        'query' => $selectCaptureStatus,
-                       'id' => 'type',
+                       'id' => 'key',
                        'name' => 'name'
                     )
                 ),
@@ -349,21 +350,20 @@ class Bambora extends PaymentModule
         $helper->fields_value['BAMBORA_MD5KEY'] = Configuration::get('BAMBORA_MD5KEY');
         $helper->fields_value['BAMBORA_SECRETTOKEN'] = Configuration::get('BAMBORA_SECRETTOKEN');
         $helper->fields_value['BAMBORA_CAPTUREONSTATUSCHANGED'] = Configuration::get('BAMBORA_CAPTUREONSTATUSCHANGED');
-        $helper->fields_value['BAMBORA_CAPTUREONSTATUS'] = Configuration::get('BAMBORA_CAPTUREONSTATUS');
+        $helper->fields_value['BAMBORA_CAPTURE_ON_STATUS[]'] = unserialize(Configuration::get('BAMBORA_CAPTURE_ON_STATUS'));
         $helper->fields_value['BAMBORA_AUTOCAPTURE_FAILUREEMAIL'] = Configuration::get('BAMBORA_AUTOCAPTURE_FAILUREEMAIL');
         $helper->fields_value['BAMBORA_ROUNDING_MODE'] = Configuration::get('BAMBORA_ROUNDING_MODE');
-
         $html =   '<div class="row">
                     <div class="col-xs-12 col-sm-12 col-md-7 col-lg-7 ">'
                            .$helper->generateForm($fields_form)
                     .'</div>
                     <div class="hidden-xs col-md-5 col-lg-5">'
-                    . $this -> buildHelptextForSettings()
+                    . $this->buildHelptextForSettings()
                     .'</div>
                  </div>'
                .'<div class="row visible-xs">
                    <div class="col-xs-12 col-sm-12">'
-                    . $this -> buildHelptextForSettings()
+                    . $this->buildHelptextForSettings()
                     .'</div>
                    </div>';
         return $html;
@@ -643,7 +643,7 @@ class Bambora extends PaymentModule
 
         $order = new Order($params['id_order']);
 
-        if ($order->module == 'bambora') {
+        if ($order->module == $this->name) {
             $html .=  $this->displayTransactionForm($order);
         }
 
@@ -663,7 +663,8 @@ class Bambora extends PaymentModule
             try {
                 $newOrderStatus = $params['newOrderStatus'];
                 $order = new Order($params['id_order']);
-                if ($newOrderStatus->id == Configuration::get('BAMBORA_CAPTUREONSTATUS') && $order->module == 'bambora') {
+                $allowedOrderStatuses = unserialize(Configuration::get('BAMBORA_CAPTURE_ON_STATUS'));
+                if(is_array($allowedOrderStatuses) && $order->module == $this->name && in_array($newOrderStatus->id, $allowedOrderStatuses)) {
                     $payment = $order->getOrderPayments();
                     $transaction_Id = count($payment) > 0 ?$payment[0]->transaction_id : null;
 
@@ -1542,12 +1543,12 @@ class Bambora extends PaymentModule
     private function createBamboraUrl()
     {
         $bamboraUrl = new BamboraUrl();
-        $bamboraUrl->accept = $this->context->link->getModuleLink('bambora', 'accept', array(), true);
+        $bamboraUrl->accept = $this->context->link->getModuleLink($this->name, 'accept', array(), true);
         $bamboraUrl->decline = $this->context->link->getPageLink('order', true, null, "step=3");
 
         $bamboraUrl->callbacks = array();
         $callback = new BamboraCallback();
-        $callback->url = $this->context->link->getModuleLink('bambora', 'callback', array(), true);
+        $callback->url = $this->context->link->getModuleLink($this->name, 'callback', array(), true);
         $bamboraUrl->callbacks[] = $callback;
 
         $bamboraUrl->immediateredirecttoaccept = Configuration::get('BAMBORA_IMMEDIATEREDIRECTTOACCEPT') ? 1 : 0;
