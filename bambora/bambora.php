@@ -635,16 +635,15 @@ class Bambora extends PaymentModule
     public function hookAdminOrder($params)
     {
         $html = '';
-
-        $bamboraUiMessage = $this->processRemote();
-        if (isset($bamboraUiMessage)) {
-            $this->buildOverlayMessage($bamboraUiMessage->type, $bamboraUiMessage->title, $bamboraUiMessage->message);
-        }
-
         $order = new Order($params['id_order']);
 
-        if ($order->module == $this->name) {
-            $html .=  $this->displayTransactionForm($order);
+        if (isset($order) && $order->module == $this->name) {
+            $bamboraUiMessage = $this->processRemote();
+            if (isset($bamboraUiMessage)) {
+                $html .= $this->buildOverlayMessage($bamboraUiMessage);
+            }
+
+            $html .= $this->displayTransactionForm($order);
         }
 
         return $html;
@@ -691,7 +690,8 @@ class Bambora extends PaymentModule
                     $message = "Auto Capture was successfull";
                     $this->createStatusChangesMessage($params["id_order"], $message);
                 }
-            } catch (Exception $e) {
+            }
+            catch (Exception $e) {
                 $message = "Auto Capture failed with message: " . $e->getMessage();
                 $this->createStatusChangesMessage($params["id_order"], $message);
                 $id_lang = (int)$this->context->language->id;
@@ -742,33 +742,31 @@ class Bambora extends PaymentModule
     /**
      * Build Overlay Message
      *
-     * @param mixed $type
-     * @param mixed $title
-     * @param mixed $message
+     * @param BamboraUiMessage $bamboraUiMessage
+     * @return string
      */
-    private function buildOverlayMessage($type, $title, $message)
+    private function buildOverlayMessage($bamboraUiMessage)
     {
         $html = '
             <a id="bambora-inline" href="#data"></a>
-            <div id="bambora-overlay"><div id="data" class="row bambora-overlay-data"><div id="bambora-message" class="col-lg-12">' ;
+            <div id="bambora-overlay"><div id="data" class="row bambora-overlay-data"><div id="bambora-message" class="col-lg-12">';
 
-        if ($type == "issue") {
+        if ($bamboraUiMessage->type == "issue") {
             $html .= $this->showExclamation();
         } else {
             $html .= $this->showCheckmark();
         }
         $html .='<div id="bambora-overlay-message-container">';
 
-        if (Tools::strlen($message) > 0) {
-            $html .='<p id="bambora-overlay-message-title-with-message">'.$title.'</p>';
-            $html .= '<hr><p id="bambora-overlay-message-message">'. $message .'</p>';
+        if (Tools::strlen($bamboraUiMessage->message) > 0) {
+            $html .='<p id="bambora-overlay-message-title-with-message">'.$bamboraUiMessage->title.'</p>';
+            $html .= '<hr><p id="bambora-overlay-message-message">'.$bamboraUiMessage->message .'</p>';
         } else {
-            $html .='<p id="bambora-overlay-message-title">'.$title.'</p>';
+            $html .='<p id="bambora-overlay-message-title">'.$bamboraUiMessage->title.'</p>';
         }
-
         $html .= '</div></div></div></div>';
 
-        echo $html;
+        return $html;
     }
 
     /**
@@ -799,7 +797,7 @@ class Bambora extends PaymentModule
         }
         $html .= '</div>';
 
-        $html .= $this->getHtmlcontent($transactionId, $order);
+        $html .= $this->buildHtmlcontent($transactionId, $order);
 
         $html .= $this->buildBamboraContainerStopTag();
 
@@ -853,7 +851,7 @@ class Bambora extends PaymentModule
      * @param mixed $order
      * @return string
      */
-    private function getHtmlcontent($transactionId, $order)
+    private function buildHtmlcontent($transactionId, $order)
     {
         $html = "";
         try {
@@ -890,7 +888,8 @@ class Bambora extends PaymentModule
                             .$this->buildLogodiv()
                         .'</div>'
                     .'</div>';
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
             $this->displayError($e->getMessage());
         }
 
@@ -952,21 +951,52 @@ class Bambora extends PaymentModule
     {
         $html = '';
         if ($transactionInfo["available"]["capture"] > 0 || $transactionInfo["available"]["credit"] > 0 || $transactionInfo["candelete"] == 'true') {
-            $html .= '<form name="bambora-remote" action="' . $_SERVER["REQUEST_URI"] . '" method="post" class="bambora-display-inline" id="bambora-action" >'
-                . '<input type="hidden" name="bambora-transaction-id" value="' . $transactionInfo["id"] . '" />'
-                . '<input type="hidden" name="bambora-order-id" value="' . $transactionInfo["orderid"] . '" />'
-                . '<input type="hidden" name="bambora-currency-code" value="' . $transactionInfo["currency"]["code"] . '" />';
+            $minorUnits = $transactionInfo["currency"]["minorunits"];
+            $availableForCapture = BamboraCurrency::convertPriceFromMinorUnits($transactionInfo["available"]["capture"], $minorUnits);
+            $availableForCredit = BamboraCurrency::convertPriceFromMinorUnits($transactionInfo["available"]["credit"], $minorUnits);
+            $inputFieldValue = 0;
+            if($availableForCapture > 0) {
+                $inputFieldValue = $availableForCapture;
+            } else {
+                $inputFieldValue = $availableForCredit;
+            }
+            $tooltip = $this->l('Example: 1234.56');
 
-            $html .= '<br />';
+
+            $html .= '<form name="bambora-remote" action="' . $_SERVER["REQUEST_URI"] . '" method="post" class="bambora-display-inline" id="bambora-action" >';
+            $html .= '<input type="hidden" name="bambora-transaction-id" value="' . $transactionInfo["id"] . '" />';
+            $html .= '<input type="hidden" name="bambora-order-id" value="' . $transactionInfo["orderid"] . '" />';
+            $html .= '<input type="hidden" name="bambora-currency-code" value="' . $transactionInfo["currency"]["code"] . '" />';
+            $html .= '<div class="input-group">';
+            $html .= '<div class="input-group-addon">' . $transactionInfo["currency"]["displayname"] . '</div>';
+            $html .= '<input type="text" data-toggle="tooltip" title="'.$tooltip.'" id="bambora_amount" name="bambora_amount" value="' . $inputFieldValue . '" />';
+            $html .= '</div>';
+            $html .= '<div id="bambora-format-error" class="alert alert-danger"><strong>'.$this->l('Warning').' </strong>'.$this->l('The amount you entered was in the wrong format. Please try again!').'</div>';
+
+            if ($availableForCapture > 0) {
+                $confirmText = $this->l('Do you really want to capture:');
+                $extra = '+getE(\'bambora_amount\').value';
+                $html .= $this->buildActionControl('capture', $this->l('Capture'), $confirmText, $extra);
+            }
+            if ($availableForCredit > 0) {
+                $confirmText = $this->l('Do you really want to refund the transaction?');
+                $extra = '+getE(\'bambora_amount\').value';
+                $html .= $this->buildActionControl('credit', $this->l('Credit'));
+            }
 
             $html .= '<div id="bambora-transaction-controls-container" class="bambora-buttons clearfix">';
-            $html .= $this->buildSpinner();
 
-            $minorUnits = $transactionInfo["currency"]["minorunits"];
 
-            $availableForCapture = BamboraCurrency::convertPriceFromMinorUnits($transactionInfo["available"]["capture"], $minorUnits);
 
-            $availableForCredit = BamboraCurrency::convertPriceFromMinorUnits($transactionInfo["available"]["credit"], $minorUnits);
+
+
+
+
+
+
+
+
+
 
             if ($availableForCapture > 0) {
                 $html .= $this->buildTransactionControlInclTextField('capture', $this->l('Capture'), "btn bambora-confirm-btn", true, $availableForCapture, $transactionInfo["currency"]["code"]);
@@ -981,11 +1011,76 @@ class Bambora extends PaymentModule
             }
 
             $html .= '</div></form>';
-            $html .= '<div id="bambora-format-error" class="alert alert-danger"><strong>'.$this->l('Warning').' </strong>'.$this->l('The amount you entered was in the wrong format. Please try again!').'</div>';
+
         }
 
         return $html;
     }
+
+    private function buildActionControl($type, $text, $confirmText = null, $extra = "")
+    {
+        $class = 'btn bambora_button ';
+        switch ($type) {
+            case 'capture':
+                $class .= 'btn-success';
+                break;
+            case 'credit':
+                $class .= 'btn-warning';
+                break;
+            case 'delete':
+                $class .= 'btn-danger';
+                break;
+            default:
+                break;
+        }
+        $confirmText = null;
+        if (isset($confirmText)) {
+            $html = '<input id="'.$type.'" class="'.$class.'" name="'.$type.'" type="submit" value="' . $text . '"onclick="return confirm(\'' . $confirmText . '\''.$extra.');" />';
+        } else {
+            $html = '<input id="'.$type.'" class="'.$class.'" name="'.$type.'" type="submit" value="' . $text . '" />';
+        }
+
+        return $html;
+    }
+
+    //private function buildButtonsForm($transactionInfo)
+    //{
+    //    $html = '';
+    //    if ($transactionInfo["available"]["capture"] > 0 || $transactionInfo["available"]["credit"] > 0 || $transactionInfo["candelete"] == 'true') {
+    //        $html .= '<form name="bambora-remote" action="' . $_SERVER["REQUEST_URI"] . '" method="post" class="bambora-display-inline" id="bambora-action" >'
+    //            . '<input type="hidden" name="bambora-transaction-id" value="' . $transactionInfo["id"] . '" />'
+    //            . '<input type="hidden" name="bambora-order-id" value="' . $transactionInfo["orderid"] . '" />'
+    //            . '<input type="hidden" name="bambora-currency-code" value="' . $transactionInfo["currency"]["code"] . '" />';
+
+    //        $html .= '<br />';
+
+    //        $html .= '<div id="bambora-transaction-controls-container" class="bambora-buttons clearfix">';
+    //        $html .= $this->buildSpinner();
+
+    //        $minorUnits = $transactionInfo["currency"]["minorunits"];
+
+    //        $availableForCapture = BamboraCurrency::convertPriceFromMinorUnits($transactionInfo["available"]["capture"], $minorUnits);
+
+    //        $availableForCredit = BamboraCurrency::convertPriceFromMinorUnits($transactionInfo["available"]["credit"], $minorUnits);
+
+    //        if ($availableForCapture > 0) {
+    //            $html .= $this->buildTransactionControlInclTextField('capture', $this->l('Capture'), "btn bambora-confirm-btn", true, $availableForCapture, $transactionInfo["currency"]["code"]);
+    //        }
+
+    //        if ($availableForCredit > 0) {
+    //            $html .= $this->buildTransactionControlInclTextField('credit', $this->l('Refund'), "btn bambora-credit-btn", true, $availableForCredit, $transactionInfo["currency"]["code"]);
+    //        }
+
+    //        if ($transactionInfo["candelete"] == 'true') {
+    //            $html .= $this->buildTransactionControl('delete', $this->l('Delete'), "btn bambora-delete-btn");
+    //        }
+
+    //        $html .= '</div></form>';
+    //        $html .= '<div id="bambora-format-error" class="alert alert-danger"><strong>'.$this->l('Warning').' </strong>'.$this->l('The amount you entered was in the wrong format. Please try again!').'</div>';
+    //    }
+
+    //    return $html;
+    //}
 
     /**
      * Create Checkout Transaction Operations Html
@@ -1269,7 +1364,8 @@ class Bambora extends PaymentModule
                         $bamboraUiMessage->message = $message;
                     }
                 }
-            } catch (Exception $e) {
+            }
+            catch (Exception $e) {
                 $this->displayError($e->getMessage());
             }
         }
