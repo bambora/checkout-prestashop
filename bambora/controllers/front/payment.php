@@ -42,20 +42,14 @@ class BamboraPaymentModuleFrontController extends ModuleFrontController
 
         //create checkout request
         $bamboraCheckoutRequest = $this->module->createCheckoutRequest($cart);
-        $bamboraPaymentData = $this->module->getBamboraPaymentData($bamboraCheckoutRequest);
-        $checkoutResponse = $bamboraPaymentData['checkoutResponse'];
+        $checkoutResponse = $this->module->getBamboraCheckoutSession($bamboraCheckoutRequest);
         if (!isset($checkoutResponse) || $checkoutResponse['meta']['result'] == false) {
             //add error message
             Tools::redirect('index.php?controller=order&step=1');
         }
-        if (Configuration::get('BAMBORA_WINDOWSTATE') == 1) {
-            $this->setRedirectAfter($checkoutResponse['url']);
-            return;
-        }
-
-        $paymentData = array('bamboraPaymentwindowUrl' => $bamboraPaymentData['paymentWindowUrl'],
-                             'bamboraCheckouturl' => $checkoutResponse['url'],
-                             'bamboraCancelurl' => $bamboraCheckoutRequest->url->decline
+        
+        $paymentData = array('bamboraWindowState' => Configuration::get('BAMBORA_WINDOWSTATE'),
+                             'bamboraCheckoutToken' => $checkoutResponse['token']
                             );
 
         $this->context->smarty->assign($paymentData);

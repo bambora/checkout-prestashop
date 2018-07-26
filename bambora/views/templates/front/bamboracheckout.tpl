@@ -14,26 +14,27 @@
 
 <div class="bambora_paymentwindow_container">
 
+  <script src="https://static.bambora.com/checkout-sdk-web/latest/checkout-sdk-web.min.js"></script>
+
   <script type="text/javascript">
-    if(!document.getElementById("bambora-paymentwindow-script")){
-      (function (n, t, i, r, u, f, e) { n[u] = n[u] || function() {
-      (n[u].q = n[u].q || []).push(arguments)}; f = t.createElement(i);
-        e = t.getElementsByTagName(i)[0]; f.async = 1; f.src = r; f.id = "bambora-paymentwindow-script"; e.parentNode.insertBefore(f, e)
-        })(window, document, "script", "{$bamboraPaymentwindowUrl|escape:'htmlall':'UTF-8'}", "bam");
-    }
+    var checkoutToken = "{$bamboraCheckoutToken|escape:'htmlall':'UTF-8'}";
+    var windowState = {$bamboraWindowState|escape:'htmlall':'UTF-8'};
+    if(windowState !== 1) {
+      var checkout = new Bambora.ModalCheckout(null);
+      checkout.initialize(checkoutToken)
+    } 
 
-    var options = {
-		'windowstate': {$bamboraWindowState|escape:'htmlall':'UTF-8'},
+    function openBamboraCheckout(){
+      if(windowState === 1) {
+        new Bambora.RedirectCheckout(checkoutToken);
+      } else {
+        checkout.show();
+      }
     }
-
-    function openPaymentWindow(url)
-    {
-		bam('open', url, options);
-    }
-
   </script>
+
   <p class="payment_module">
-    <a class="bamboracheckout"  title="{$bamboraPaymentTitle|escape:'htmlall':'UTF-8'}" href="javascript:openPaymentWindow('{$bamboraCheckouturl|escape:'htmlall':'UTF-8'}')">
+    <a class="bamboracheckout"  title="{$bamboraPaymentTitle|escape:'htmlall':'UTF-8'}" href="javascript:openBamboraCheckout()">
       {if $onlyShowLogoes == false}
       {$bamboraPaymentTitle|escape:'htmlall':'UTF-8'}
       {/if}

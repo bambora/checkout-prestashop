@@ -25,7 +25,7 @@ class Bambora extends PaymentModule
 {
     private $apiKey;
 
-    const MODULE_VERSION = '1.5.5';
+    const MODULE_VERSION = '1.6.0';
     const V15 = '15';
     const V16 = '16';
     const V17 = '17';
@@ -34,7 +34,7 @@ class Bambora extends PaymentModule
     {
         $this->name = 'bambora';
         $this->tab = 'payments_gateways';
-        $this->version = '1.5.5';
+        $this->version = '1.6.0';
         $this->author = 'Bambora Online A/S';
 
         $this->ps_versions_compliancy = array('min' => '1.5', 'max' => _PS_VERSION_);
@@ -519,9 +519,8 @@ class Bambora extends PaymentModule
 
         $cart = $params['cart'];
         $bamboraCheckoutRequest = $this->createCheckoutRequest($cart);
-        $bamboraPaymentData = $this->getBamboraPaymentData($bamboraCheckoutRequest);
+        $checkoutResponse = $this->getBamboraCheckoutSession($bamboraCheckoutRequest);
 
-        $checkoutResponse = $bamboraPaymentData['checkoutResponse'];
         if (!isset($checkoutResponse) || $checkoutResponse['meta']['result'] == false) {
             $errormessage = $checkoutResponse['meta']['message']['enduser'];
             $this->context->smarty->assign('bambora_errormessage', $errormessage);
@@ -536,9 +535,8 @@ class Bambora extends PaymentModule
         $callToActionText = Tools::strlen(Configuration::get("BAMBORA_TITLE")) > 0 ? Configuration::get("BAMBORA_TITLE") : "Bambora Online Checkout";
 
         $paymentData = array('bamboraPaymentCardIds' => $paymentcardIds,
-                             'bamboraPaymentwindowUrl' => $bamboraPaymentData['paymentWindowUrl'],
                              'bamboraWindowState' => Configuration::get('BAMBORA_WINDOWSTATE'),
-                             'bamboraCheckouturl' => $checkoutResponse['url'],
+                             'bamboraCheckoutToken' => $checkoutResponse['token'],
                              'bamboraPaymentTitle' => $callToActionText,
                              'onlyShowLogoes' => Configuration::get('BAMBORA_ONLYSHOWPAYMENTLOGOESATCHECKOUT')
                              );
@@ -1367,19 +1365,12 @@ class Bambora extends PaymentModule
         return $api->getAvaliablePaymentcardidsForMerchant($currency, $amount);
     }
 
-    public function getBamboraPaymentData($checkoutRequest)
+    public function getBamboraCheckoutSession($checkoutRequest)
     {
         $apiKey = $this->getApiKey();
         $api = new BamboraApi($apiKey);
 
-        $checkoutResponse = $api->getcheckoutresponse($checkoutRequest);
-
-        $bamboraPaymentwindowUrl = $api->getcheckoutpaymentwindowjs();
-        $paymentData = array('checkoutResponse' => $checkoutResponse,
-                             'paymentWindowUrl' => $bamboraPaymentwindowUrl
-                             );
-
-        return $paymentData;
+       return $api->getcheckoutresponse($checkoutRequest);
     }
 
     /**

@@ -16,27 +16,28 @@
 
 {block name="content"}
 <section>
+  <script src="https://static.bambora.com/checkout-sdk-web/latest/checkout-sdk-web.min.js"></script>
+
   <h3>{l s='Thank you for using Bambora Online Checkout' mod='bambora'}</h3>
   <p>{l s='Please wait...' mod='bambora'}</p>
-
+  
   <script type="text/javascript">
-   if(!document.getElementById("bambora-paymentwindow-script")){
-      (function (n, t, i, r, u, f, e) { n[u] = n[u] || function() {
-      (n[u].q = n[u].q || []).push(arguments)}; f = t.createElement(i);
-        e = t.getElementsByTagName(i)[0]; f.async = 1; f.src = r; f.id = "bambora-paymentwindow-script"; e.parentNode.insertBefore(f, e)
-        })(window, document, "script", "{$bamboraPaymentwindowUrl|escape:'htmlall':'UTF-8'}", "bam");
+    var checkoutToken = "{$bamboraCheckoutToken|escape:'htmlall':'UTF-8'}";
+    var windowState = {$bamboraWindowState|escape:'htmlall':'UTF-8'};
+    if(windowState === 1) {
+      new Bambora.RedirectCheckout(checkoutToken);
+    } else {
+      var checkout = new Bambora.ModalCheckout(null);
+      checkout.on(Bambora.Event.Cancel, function(payload) {
+        window.location.href = payload.declineUrl;
+      });
+      checkout.on(Bambora.Event.Close, function(payload) {
+        window.location.href = payload.acceptUrl;
+      })
+      checkout.initialize(checkoutToken).then(()=> {
+        checkout.show();
+      });
     }
-   
-    var onClose = function(){
-    window.location.href = "{$bamboraCancelurl|escape:'htmlall':'UTF-8'}";
-    };
-
-    var options = {
-		'windowstate': 2,
-		'onClose': onClose
-    }
-   
-    bam('open', '{$bamboraCheckouturl|escape:'htmlall':'UTF-8'}', options);
   </script>
 </section>
 
