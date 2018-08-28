@@ -34,7 +34,7 @@
       checkout.on(Bambora.Event.Close, function(payload) {
         window.location.href = payload.acceptUrl;
       })
-      checkout.initialize(checkoutToken).then(()=> {
+      checkout.initialize(checkoutToken).then(function() {
         checkout.show();
       });
     }
