@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2017. All rights reserved Bambora Online A/S.
+ * Copyright (c) 2019. All rights reserved Bambora Online A/S.
  *
  * This program is free software. You are allowed to use the software but NOT allowed to modify the software.
  * It is also not legal to do any changes to the software and distribute it in your own name / brand.
@@ -8,7 +8,7 @@
  * All use of the payment modules happens at your own risk. We offer a free test account that you can use to test the module.
  *
  * @author    Bambora Online A/S
- * @copyright Bambora (http://bambora.com)
+ * @copyright Bambora (https://bambora.com)
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  *
  */
@@ -18,7 +18,35 @@ include('bamboraEndpoints.php');
 
 class BamboraApi
 {
-    private $apiKey = "";
+    /**
+     * Api Key
+     * @var string
+     */
+    private $apiKey;
+
+    /**
+     * Checkout Api endpoint
+     * @var string
+     */
+    private $checkoutEndpoint;
+
+    /**
+     * Transaction Api endpoint
+     * @var string
+     */
+    private $transactionEndpoint;
+
+    /**
+     * Merchant Api endpoint
+     * @var string
+     */
+    private $merchantEndpoint;
+
+    /**
+     * Assets endpoint
+     * @var string
+     */
+    private $assetsEndpoint;
 
     /**
      * __construct
@@ -28,6 +56,10 @@ class BamboraApi
     public function __construct($apiKey = "")
     {
         $this->apiKey = $apiKey;
+        $this->checkoutEndpoint = BamboraEndpointConfig::getCheckoutEndpoint();
+        $this->transactionEndpoint = BamboraEndpointConfig::getTransactionEndpoint();
+        $this->merchantEndpoint = BamboraEndpointConfig::getMerchantEndpoint();
+        $this->assetsEndpoint = BamboraEndpointConfig::getCheckoutAssets();
     }
 
     /**
@@ -38,24 +70,12 @@ class BamboraApi
      */
     public function getcheckoutresponse($bamboracheckoutrequest)
     {
-        $serviceUrl = BamboraendpointConfig::getCheckoutEndpoint().'/checkout' ;
+        $serviceUrl = "{$this->checkoutEndpoint}/checkout";
 
         $jsonData = json_encode($bamboracheckoutrequest);
         $expresscheckoutresponse = $this ->_callRestService($serviceUrl, $jsonData, "POST");
 
         return json_decode($expresscheckoutresponse, true);
-    }
-
-    /**
-     * getcheckoutpaymentwindowjs
-     *
-     * @return string
-     */
-    public function getcheckoutpaymentwindowjs()
-    {
-        $url = BamboraendpointConfig::getCheckoutAssets().'/paymentwindow-v1.min.js';
-
-        return $url;
     }
 
     /**
@@ -68,7 +88,8 @@ class BamboraApi
      */
     public function capture($transactionid, $amount, $currency)
     {
-        $serviceUrl = BamboraendpointConfig::getTransactionEndpoint().'/transactions/'.  sprintf('%.0F', $transactionid) . '/capture';
+
+        $serviceUrl = "{$this->transactionEndpoint}/transactions/{$transactionid}/capture";
 
         $data = array();
         $data["amount"] = $amount;
@@ -91,7 +112,7 @@ class BamboraApi
      */
     public function credit($transactionid, $amount, $currency, $invoicelines)
     {
-        $serviceUrl = BamboraendpointConfig::getTransactionEndpoint().'/transactions/'.  sprintf('%.0F', $transactionid) . '/credit';
+        $serviceUrl = "{$this->transactionEndpoint}/transactions/{$transactionid}/credit";
 
         $data = array();
         $data["amount"] = $amount;
@@ -112,7 +133,7 @@ class BamboraApi
      */
     public function delete($transactionid)
     {
-        $serviceUrl = BamboraendpointConfig::getTransactionEndpoint().'/transactions/'.  sprintf('%.0F', $transactionid) . '/delete';
+        $serviceUrl = "{$this->transactionEndpoint}/transactions/{$transactionid}/delete";
 
         $result = $this->_callRestService($serviceUrl, null, "POST");
         return json_decode($result, true);
@@ -126,7 +147,7 @@ class BamboraApi
      */
     public function gettransaction($transactionid)
     {
-        $serviceUrl = BamboraendpointConfig::getMerchantEndpoint().'/transactions/'. sprintf('%.0F', $transactionid);
+        $serviceUrl = "{$this->merchantEndpoint}/transactions/{$transactionid}";
 
         $result = $this->_callRestService($serviceUrl, null, "GET");
         return json_decode($result, true);
@@ -140,7 +161,7 @@ class BamboraApi
      */
     public function gettransactionoperations($transactionid)
     {
-        $serviceUrl = BamboraendpointConfig::getMerchantEndpoint().'/transactions/'. sprintf('%.0F', $transactionid) .'/transactionoperations';
+        $serviceUrl = "{$this->merchantEndpoint}/transactions/{$transactionid}/transactionoperations";
 
         $result = $this->_callRestService($serviceUrl, null, "GET");
         return json_decode($result, true);
@@ -155,7 +176,7 @@ class BamboraApi
      */
     public function getPaymentTypes($currency, $amount)
     {
-        $serviceUrl = BamboraendpointConfig::getMerchantEndpoint().'/paymenttypes?currency='. $currency .'&amount='.$amount;
+        $serviceUrl = "{$this->merchantEndpoint}/paymenttypes?currency={$currency}&amount={$amount}";
 
         $result = $this->_callRestService($serviceUrl, null, "GET");
         return $result;
