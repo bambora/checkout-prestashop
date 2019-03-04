@@ -21,6 +21,9 @@
     var windowState = {$bamboraWindowState|escape:'htmlall':'UTF-8'};
     if(windowState !== 1) {
       var checkout = new Bambora.ModalCheckout(null);
+      checkout.on(Bambora.Event.Close, function(payload) {
+        window.location.href = payload.acceptUrl;
+      });
       checkout.initialize(checkoutToken)
     } 
 
