@@ -1199,7 +1199,7 @@ class Bambora extends PaymentModule
                 $transactionId = Tools::getValue("bambora-transaction-id");
                 $currencyCode = Tools::getValue("bambora-currency-code");
                 $minorUnits = BamboraCurrency::getCurrencyMinorunits($currencyCode);
-
+                $orderId = Tools::getValue("bambora-order-id");
                 $apiKey = $this->getApiKey();
                 $api = new BamboraApi($apiKey);
 
@@ -1238,19 +1238,26 @@ class Bambora extends PaymentModule
                 }
 
                 if ($result["meta"]["result"] === true) {
+                    $logText = "";
                     if (Tools::isSubmit('bambora-capture')) {
                         $captureText = $this->l('The Payment was captured successfully');
                         $bamboraUiMessage->type = "capture";
                         $bamboraUiMessage->title = $captureText;
+                        $logText = $captureText;
                     } elseif (Tools::isSubmit('bambora-credit')) {
                         $creditText = $this->l('The Payment was refunded successfully');
                         $bamboraUiMessage->type = "credit";
                         $bamboraUiMessage->title = $creditText;
+                        $logText = $creditText;
                     } elseif (Tools::isSubmit('bambora-delete')) {
                         $deleteText = $this->l('The Payment was delete successfully');
                         $bamboraUiMessage->type = "delete";
                         $bamboraUiMessage->title = $deleteText;
+                        $logText = $deleteText;
                     }
+                    //For Audit log
+                    $logText .= " :: OrderId: " . $orderId . " TransactionId: " . $transactionId;
+                    $this->writeLogEntry($logText, 1);
                 } else {
                     $bamboraUiMessage->type = "issue";
                     $bamboraUiMessage->title = $this->l('An issue occured, and the operation was not performed.');
@@ -1595,6 +1602,14 @@ class Bambora extends PaymentModule
             return $this::V17;
         }
     }
+    public function writeLogEntry($message, $severity)
+    {
 
+        if ($this->getPsVersion() === Bambora::V15) {
+            Logger::addLog($message, $severity);
+        } else {
+            PrestaShopLogger::addLog($message, $severity);
+        }
+    }
     #endregion
 }
