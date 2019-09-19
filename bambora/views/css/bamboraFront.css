@@ -15,7 +15,8 @@
 	margin-left: 6px;
 }
 .bambora_paymentlogos img {
-    margin-left: -6px;
+    max-height: 40px;
+    height: 100%;
 }
 
 .bambora-compleated-container #bambora_completed_payment {

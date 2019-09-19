@@ -44,7 +44,7 @@
       <span class="bambora_paymentlogos">
         {if $bamboraPaymentCardIds|@count gt 0}
         {foreach from=$bamboraPaymentCardIds key=k item=v}
-        <img src="{'https://d3r1pwhfz7unl9.cloudfront.net/paymentlogos/cardid.png'|replace:'cardid':$v|escape:'htmlall':'UTF-8'}"/>
+        <img src="{'https://d3r1pwhfz7unl9.cloudfront.net/paymentlogos/cardid.svg'|replace:'cardid':$v|escape:'htmlall':'UTF-8'}"/>
         {/foreach}
         {/if}
       </span>
