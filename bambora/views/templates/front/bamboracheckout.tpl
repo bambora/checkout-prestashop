@@ -13,9 +13,6 @@
 *}
 
 <div class="bambora_paymentwindow_container">
-
-  <script src="https://static.bambora.com/checkout-sdk-web/latest/checkout-sdk-web.min.js"></script>
-
   <script type="text/javascript">
     var checkoutToken = "{$bamboraCheckoutToken|escape:'htmlall':'UTF-8'}";
     var windowState = {$bamboraWindowState|escape:'htmlall':'UTF-8'};

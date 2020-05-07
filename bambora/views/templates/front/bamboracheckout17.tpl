@@ -16,8 +16,6 @@
 
 {block name="content"}
 <section>
-  <script src="https://static.bambora.com/checkout-sdk-web/latest/checkout-sdk-web.min.js"></script>
-
   <h3>{l s='Thank you for using Bambora Online Checkout' mod='bambora'}</h3>
   <p>{l s='Please wait...' mod='bambora'}</p>
   
