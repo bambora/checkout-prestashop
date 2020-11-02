@@ -1070,10 +1070,10 @@ class Bambora extends PaymentModule
      */
     private function buildLogodiv()
     {
-        $html = '<a href="https://admin.epay.eu/Account/Login" alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">';
+        $html = '<a href="https://merchant.bambora.com" alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">';
         $html .= '<img class="bambora-logo" src="../modules/' . $this->name . '/views/img/bambora.svg" />';
         $html .= '</a>';
-        $html .= '<div><a href="https://admin.epay.eu/Account/Login"  alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">' .$this->l('Go to Bambora Merchant Administration') .'</a></div>';
+        $html .= '<div><a href="https://merchant.bambora.com"  alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">' .$this->l('Go to Bambora Merchant Administration') .'</a></div>';
 
         return $html;
     }
