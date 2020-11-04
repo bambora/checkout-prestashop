@@ -50,6 +50,9 @@ class BamboraOrderLine
     public $totalpriceinclvat;
     public $totalpricevatamount;
     public $unit;
+    public $unitpriceinclvat;
+    public $unitprice;
+    public $unitpricevatamount;
     public $vat;
 }
 class BamboraUrl
