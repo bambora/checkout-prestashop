@@ -96,8 +96,14 @@ abstract class BaseAction extends ModuleFrontController
 
                 $currencyCode = $bamboraTransactionInfo["currency"]["code"];
                 $currencyid = Currency::getIdByIsoCode($currencyCode);
-                $paymentType = $bamboraTransactionInfo['information']['paymenttypes'][0]['displayname'];
-                $truncatedCardNumber = $bamboraTransactionInfo['information']['primaryaccountnumbers'][0]['number'];
+                $paymentType = null;
+                if (isset($bamboraTransactionInfo['information']['paymenttypes'][0])){
+                    $paymentType = $bamboraTransactionInfo['information']['paymenttypes'][0]['displayname'];
+                }
+                $truncatedCardNumber = "";
+                if (isset($bamboraTransactionInfo['information']['primaryaccountnumbers'][0])){
+                    $truncatedCardNumber = $bamboraTransactionInfo['information']['primaryaccountnumbers'][0]['number'];
+                }
 
                 $mailVars = array('TransactionId'=>$transactionId,
                                   'PaymentType'=>$paymentType,
