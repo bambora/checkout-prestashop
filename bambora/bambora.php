@@ -694,7 +694,7 @@ class Bambora extends PaymentModule
                         throw new Exception($errorMessage);
                     }
 
-                    $message = "Auto Capture was successfull";
+                    $message = "Auto Capture was successful";
                     $this->createStatusChangesMessage($params["id_order"], $message);
                 }
             } catch (Exception $e) {
@@ -920,12 +920,15 @@ class Bambora extends PaymentModule
 
         $amount = BamboraCurrency::convertPriceFromMinorUnits($transactionInfo["total"]["authorized"], $transactionInfo["currency"]["minorunits"]);
 
-        $formatetAmount = Tools::displayPrice((float)$amount, $currency);
+        $formattedAmount = Tools::displayPrice((float)$amount, $currency);
 
-        $html .= $formatetAmount .'</div></td></tr>';
+
+        $html .= $formattedAmount .'</div></td></tr>';
         $html .='<tr><td>'. $this -> l('Order Id') .':</td><td>'. $transactionInfo["orderid"].'</td></tr>';
-
-        $formattedCardnumber = BamboraHelpers::formatTruncatedCardnumber($transactionInfo["information"]["primaryaccountnumbers"][0]["number"]);
+        $formattedCardnumber = "";
+        if (isset($transactionInfo["information"]["primaryaccountnumbers"][0])){
+            $formattedCardnumber = BamboraHelpers::formatTruncatedCardnumber($transactionInfo["information"]["primaryaccountnumbers"][0]["number"]);
+        }
         $html .= '<tr><td>'. $this->l('Cardnumber').':</td><td>' .$formattedCardnumber .'</td></tr>';
 
         $html .='<tr><td>'. $this->l('Status') .':</td><td>'. $this->checkoutStatus($transactionInfo["status"]).'</td></tr>';
@@ -1101,11 +1104,11 @@ class Bambora extends PaymentModule
         $tooltip = $this->l('Example: 1234.56');
         if (!$editable) {
             $readonly = "readonly";
-            if ( $type == "credit" ) { 
-                $tooltip = "With Payment Provider Collector Bank only full refund is possible here. For partial refund, please use Bambora Merchant Portal.";
+            if ($type == "credit") {
+                $tooltip = $this->l('With Payment Provider Collector Bank only full refund is possible here. For partial refund, please use Bambora Merchant Portal.');
             }
-            if ( $type == "capture" ) {
-                $tooltip = "With Payment Provider Collector Bank only full capture is possible here. For partial capture, please use Bambora Merchant Portal.";
+            if ($type == "capture") {
+                $tooltip = $this->l('With Payment Provider Collector Bank only full capture is possible here. For partial capture, please use Bambora Merchant Portal.');
             }
         } else {
             $readonly  = "";
