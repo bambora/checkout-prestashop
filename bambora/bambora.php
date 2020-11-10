@@ -1236,7 +1236,11 @@ class Bambora extends PaymentModule
                     $amount = (float)$amountSanitized;
                     if (is_float($amount)) {
                         $amountMinorunits = BamboraCurrency::convertPriceToMinorUnits($amount, $minorUnits, Configuration::get('BAMBORA_ROUNDING_MODE'));
-                        $id_order = Order::getIdByCartId($orderId);
+                        if ($this->getPsVersion() === $this::V17) {
+                            $id_order = Order::getIdByCartId((int)$orderId);
+                        }else{
+                            $id_order = Order::getOrderByCartId((int)($orderId));
+                        }
                         $invoiceLines = $this->createBamboraOrderlinesFromOrder($id_order, $amountMinorunits);
                         $result = $api->capture($transactionId, $amountMinorunits, $currencyCode, $invoiceLines);
                     } else {
@@ -1251,7 +1255,11 @@ class Bambora extends PaymentModule
                     $amount = (float)$amountSanitized;
                     if (is_float($amount)) {
                         $amountMinorunits = BamboraCurrency::convertPriceToMinorUnits($amount, $minorUnits, Configuration::get('BAMBORA_ROUNDING_MODE'));
-                        $id_order = Order::getIdByCartId($orderId);
+                        if ($this->getPsVersion() === $this::V17) {
+                            $id_order = Order::getIdByCartId((int)$orderId);
+                        }else{
+                            $id_order = Order::getOrderByCartId((int)($orderId));
+                        }
                         $invoiceLines = $this->createBamboraOrderlinesFromOrder($id_order, $amountMinorunits);
                         $result = $api->credit($transactionId, $amountMinorunits, $currencyCode, $invoiceLines);
                     } else {
@@ -1498,10 +1506,13 @@ class Bambora extends PaymentModule
      */
     private function createBamboraAddress($address)
     {
+        $address_delivery_country = new Country($address->id_country);
+        $iso_code = $address_delivery_country->iso_code;
+
         $bamboraAddress = new BamboraAddress();
         $bamboraAddress->att = $address->other;
         $bamboraAddress->city = $address->city;
-        $bamboraAddress->country = $address->country;
+        $bamboraAddress->country = $iso_code;
         $bamboraAddress->firstname = $address->firstname;
         $bamboraAddress->lastname = $address->lastname;
         $bamboraAddress->street = $address->address1;
