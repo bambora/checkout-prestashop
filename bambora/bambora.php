@@ -686,8 +686,7 @@ class Bambora extends PaymentModule
 
                     $apiKey = $this->getApiKey();
                     $api = new BamboraApi($apiKey);
-                    $invoiceLines = $this->createBamboraOrderlinesFromOrder( $order, $currencyCode);
-                    $captureResponse = $api->capture($transaction_Id, $amountInMinorUnits, $currencyCode, $invoiceLines);
+                    $captureResponse = $api->capture($transaction_Id, $amountInMinorUnits, $currencyCode, null);
 
                     if (!isset($captureResponse) || !$captureResponse["meta"]["result"]) {
                         $errorMessage = isset($captureResponse) ? $captureResponse["meta"]["message"]["merchant"] : "Could not connect to Bambora";
@@ -975,9 +974,8 @@ class Bambora extends PaymentModule
             $availableForCapture = BamboraCurrency::convertPriceFromMinorUnits($transactionInfo["available"]["capture"], $minorUnits);
 
             $availableForCredit = BamboraCurrency::convertPriceFromMinorUnits($transactionInfo["available"]["credit"], $minorUnits);
-            $paymentTypesGroupId = $transactionInfo["information"]["paymenttypes"][0]["groupid"];
-            $paymentTypesId = $transactionInfo["information"]["paymenttypes"][0]["id"];
-            if ($paymentTypesGroupId  == 19 && $paymentTypesId == 40 ) { //Collector Bank
+
+            if ($this->isCollectorBank($transactionInfo) ){ //Collector Bank
                 $editable = false;
             } else {
                 $editable = true;
@@ -1000,6 +998,24 @@ class Bambora extends PaymentModule
         }
 
         return $html;
+    }
+    /**
+     * Check if transaction is for Collector Bank
+     *
+     * @param mixed $transactionInfo
+     * @return boolean
+     */
+
+    private function isCollectorBank($transactionInfo){
+        if (isset($transactionInfo["information"]["paymenttypes"][0])){
+            $paymentTypesGroupId = $transactionInfo["information"]["paymenttypes"][0]["groupid"];
+            $paymentTypesId = $transactionInfo["information"]["paymenttypes"][0]["id"];
+            if ($paymentTypesGroupId  == 19 && $paymentTypesId == 40 ) { //Collector Bank
+                return true;
+            }
+            return false;
+        }
+        return false;
     }
 
     /**
@@ -1113,6 +1129,12 @@ class Bambora extends PaymentModule
         } else {
             $readonly  = "";
         }
+        if ($editable){
+            $isCollector = 0;
+        }else{
+            $isCollector = 1;
+        }
+
         $html = '<div>
                     <div class="bambora-float-left">
                         <div class="bambora-confirm-frame">
@@ -1123,6 +1145,7 @@ class Bambora extends PaymentModule
                                 <a class="bambora-cancel"></a>
                              </div>
                              <div class="col-xs-5">
+                                <input name ="bambora-isCollector" value ="'.$isCollector.'" type="hidden"/>
                                 <input id="bambora-action-input" type="text" data-toggle="tooltip" title="'.$tooltip.'" required="required" '.$readonly.' name="bambora-'.$type.'-value" value="'.$valueOfInputfield .'" />
                                <p>'. $currencycode.'</p>
                             </div>
@@ -1239,13 +1262,7 @@ class Bambora extends PaymentModule
                     $amount = (float)$amountSanitized;
                     if (is_float($amount)) {
                         $amountMinorunits = BamboraCurrency::convertPriceToMinorUnits($amount, $minorUnits, Configuration::get('BAMBORA_ROUNDING_MODE'));
-                        if ($this->getPsVersion() === $this::V17) {
-                            $id_order = Order::getIdByCartId((int)$orderId);
-                        }else{
-                            $id_order = Order::getOrderByCartId((int)($orderId));
-                        }
-                        $invoiceLines = $this->createBamboraOrderlinesFromOrder($id_order, $amountMinorunits);
-                        $result = $api->capture($transactionId, $amountMinorunits, $currencyCode, $invoiceLines);
+                        $result = $api->capture($transactionId, $amountMinorunits, $currencyCode, null);
                     } else {
                         $bamboraUiMessage->type = 'issue';
                         $bamboraUiMessage->title = $this->l('Inputfield is not a valid number');
@@ -1258,13 +1275,14 @@ class Bambora extends PaymentModule
                     $amount = (float)$amountSanitized;
                     if (is_float($amount)) {
                         $amountMinorunits = BamboraCurrency::convertPriceToMinorUnits($amount, $minorUnits, Configuration::get('BAMBORA_ROUNDING_MODE'));
-                        if ($this->getPsVersion() === $this::V17) {
-                            $id_order = Order::getIdByCartId((int)$orderId);
+                        $isCollectorBank =  Tools::getValue('bambora-isCollector');
+                        if ($isCollectorBank){
+                            $result = $api->credit($transactionId, $amountMinorunits, $currencyCode);
                         }else{
-                            $id_order = Order::getOrderByCartId((int)($orderId));
+                            $invoiceLine = $this->buildCreditInvoiceLine($amountMinorunits);
+                            $result = $api->credit($transactionId, $amountMinorunits, $currencyCode, $invoiceLine);
                         }
-                        $invoiceLines = $this->createBamboraOrderlinesFromOrder($id_order, $amountMinorunits);
-                        $result = $api->credit($transactionId, $amountMinorunits, $currencyCode, $invoiceLines);
+
                     } else {
                         $bamboraUiMessage->type = 'issue';
                         $bamboraUiMessage->title = $this->l('Inputfield is not a valid number');
@@ -1552,9 +1570,9 @@ class Bambora extends PaymentModule
             $line->totalprice = BamboraCurrency::convertPriceToMinorUnits($product["total_price_tax_excl"], $minorUnits, Configuration::get('BAMBORA_ROUNDING_MODE'));
             $line->totalpriceinclvat = BamboraCurrency::convertPriceToMinorUnits($product["total_price_tax_incl"], $minorUnits, Configuration::get('BAMBORA_ROUNDING_MODE'));
             $line->totalpricevatamount = BamboraCurrency::convertPriceToMinorUnits($product["total_price_tax_incl"] - $product["total_price_tax_excl"], $minorUnits, Configuration::get('BAMBORA_ROUNDING_MODE'));
-            $line->unitprice = BamboraCurrency::convertPriceToMinorUnits($product["unit_price_tax_excl"], $minorUnits, Configuration::get('BAMBORA_ROUNDING_MODE'));
-            $line->unitpriceinclvat = BamboraCurrency::convertPriceToMinorUnits($product["unit_price_tax_incl"], $minorUnits, Configuration::get('BAMBORA_ROUNDING_MODE'));
-            $line->unitpricevatamount = BamboraCurrency::convertPriceToMinorUnits($product["unit_price_tax_incl"] - $product["unit_price_tax_excl"], $minorUnits, Configuration::get('BAMBORA_ROUNDING_MODE'));
+            $line->unitprice = BamboraCurrency::convertPriceToMinorUnits($product["total_price_tax_excl"]/$line->quantity, $minorUnits, Configuration::get('BAMBORA_ROUNDING_MODE'));
+            $line->unitpriceinclvat = BamboraCurrency::convertPriceToMinorUnits($product["total_price_tax_incl"]/$line->quantity, $minorUnits, Configuration::get('BAMBORA_ROUNDING_MODE'));
+            $line->unitpricevatamount = BamboraCurrency::convertPriceToMinorUnits(($product["total_price_tax_incl"] - $product["total_price_tax_excl"])/$line->quantity, $minorUnits, Configuration::get('BAMBORA_ROUNDING_MODE'));
             $line->unit = $this->l('pcs.');
             $line->vat =  round($line->totalpricevatamount / $line->totalprice * 100);
             $bamboraOrderlines[] = $line;

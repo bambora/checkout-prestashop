@@ -87,7 +87,7 @@ class BamboraApi
      * @param mixed $invoiceLines
      * @return mixed
      */
-    public function capture($transactionid, $amount, $currency, $invoiceLines)
+    public function capture($transactionid, $amount, $currency, $invoiceLines = null)
     {
 
         $serviceUrl = "{$this->transactionEndpoint}/transactions/{$transactionid}/capture";
@@ -95,7 +95,9 @@ class BamboraApi
         $data = array();
         $data["amount"] = $amount;
         $data["currency"] = $currency;
-        $data["invoicelines"] = $invoiceLines;
+        if (isset($invoiceLines)){
+            $data["invoicelines"] = $invoiceLines;
+        }
         $jsonData = json_encode($data);
 
         $result = $this->_callRestService($serviceUrl, $jsonData, "POST");
@@ -111,14 +113,17 @@ class BamboraApi
      * @param mixed $invoiceLines
      * @return mixed
      */
-    public function credit($transactionid, $amount, $currency, $invoiceLines)
+    public function credit($transactionid, $amount, $currency, $invoiceLines = null)
     {
         $serviceUrl = "{$this->transactionEndpoint}/transactions/{$transactionid}/credit";
 
         $data = array();
         $data["amount"] = $amount;
         $data["currency"] = $currency;
-        $data["invoicelines"] = $invoiceLines;
+        if (isset($invoiceLines)){
+            $data["invoicelines"] = $invoiceLines;
+        }
+
 
         $jsonData = json_encode($data);
 
