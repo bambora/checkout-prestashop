@@ -1258,7 +1258,7 @@ class Bambora extends PaymentModule
                              </div>
                              <div class="col-xs-5">
                                 <input name ="bambora-isCollector" value ="'.$isCollector.'" type="hidden"/>
-                                <input id="bambora-action-input" type="text"   required="required" '.$readonly.' name="bambora-'.$type.'-value" value="'.$valueOfInputfield .'" data-placement="right" />
+                                <input id="bambora-action-input" type="text"   required="required" '.$readonly.' name="bambora-'.$type.'-value" value="'.$valueOfInputfield .'"  />
                                <p>'. $currencycode.'</p>
                                <p><em>'. $tooltip.'</em></p>
                             </div>
@@ -1450,7 +1450,10 @@ class Bambora extends PaymentModule
                         $logText = $deleteText;
                     }
                     //For Audit log
-                    $logText .= " :: OrderId: " . $orderId . " TransactionId: " . $transactionId;
+
+                    $employee=$this->context->employee;
+
+                    $logText .= " :: OrderId: " . $orderId . " TransactionId: " . $transactionId. " Employee: ".$employee->firstname." ".$employee->lastname." ".$employee->email;
                     $this->writeLogEntry($logText, 1);
                 } else {
                     $bamboraUiMessage->type = "issue";
