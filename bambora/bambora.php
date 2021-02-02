@@ -49,6 +49,15 @@ class Bambora extends PaymentModule
 
         $this->displayName = 'Bambora Online Checkout';
         $this->description = $this->l('Accept online payments quick and secure by Bambora Online Checkout');
+
+        if ($this->isPsVersionHigherThan177()){
+            if (!$this->isRegisteredInHook('displayAdminOrderSideBottom')){
+                $this->registerHook('displayAdminOrderSideBottom');
+            }
+            if (!$this->isRegisteredInHook('displayAdminOrderMainBottom')){
+                $this->registerHook('displayAdminOrderMainBottom');
+            }
+        }
     }
 
     #region Install and Setup
@@ -78,7 +87,14 @@ class Bambora extends PaymentModule
                 return false;
             }
         }
-
+        if ($this->isPsVersionHigherThan177()){
+            if (!$this->registerHook('displayAdminOrderSideBottom')) {
+                return false;
+            }
+            if (!$this->registerHook('displayAdminOrderMainBottom')) {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -640,6 +656,28 @@ class Bambora extends PaymentModule
      */
     public function hookAdminOrder($params)
     {
+
+        $html = '';
+        if (!$this->isPsVersionHigherThan177()) {
+            $bamboraUiMessage = $this->processRemote();
+            if (isset($bamboraUiMessage)) {
+                $this->buildOverlayMessage($bamboraUiMessage->type, $bamboraUiMessage->title, $bamboraUiMessage->message);
+            }
+            $order = new Order($params['id_order']);
+            if ($order->module == $this->name) {
+                $html .= $this->displayTransactionForm($order);
+            }
+        }
+        return $html;
+    }
+    /**
+     * Hook Admin Order Main Bottom
+     *
+     * @param mixed $params
+     * @return string
+     */
+    public function hookDisplayAdminOrderMainBottom($params)
+    {
         $html = '';
 
         $bamboraUiMessage = $this->processRemote();
@@ -653,6 +691,30 @@ class Bambora extends PaymentModule
             $html .=  $this->displayTransactionForm($order);
         }
 
+        return $html;
+    }
+    /**
+     * Hook Admin Order Side Bottom
+     *
+     * @param mixed $params
+     * @return string
+     */
+    public function hookDisplayAdminOrderSideBottom($params)
+    {    $order = new Order($params['id_order']);
+        if ($order->module == $this->name) {
+        $html = '
+        <div class="card mt-2 d-print-none">
+            <div class="card-header">
+                    <h3 class="card-header-title">
+                    Bambora Merchant Administration
+                     </h3>
+            </div>
+            <div class="card-body">';
+        $html .=  $this->buildLogodiv();
+        $html .= '
+            </div>
+        </div>';
+        }
         return $html;
     }
 
@@ -796,13 +858,7 @@ class Bambora extends PaymentModule
         }
         $cardBrand = $payments[0]->card_brand;
 
-        $html .= '<div class="panel-heading">';
-        if (!empty($cardBrand)) {
-            $html .= "Bambora Checkout ({$cardBrand})";
-        } else {
-            $html .= "Bambora Checkout";
-        }
-        $html .= '</div>';
+        $html .= $this->buildBamboraContainerHeaderTag($cardBrand);
 
         $html .= $this->getHtmlcontent($transactionId, $order);
 
@@ -810,7 +866,32 @@ class Bambora extends PaymentModule
 
         return $html;
     }
+    /**
+     * Build Bambora Container Header Tag
+     * @param string $cardBrand
+     * @return string
+     */
+    private function buildBamboraContainerHeaderTag($cardBrand){
+        if ($this->isPsVersionHigherThan177()){
+            $html= '<div class="card-header"> <h3 class="card-header-title">';
+            if (!empty($cardBrand)) {
+                $html .= "Bambora Checkout ({$cardBrand})";
+            } else {
+                $html .= "Bambora Checkout";
+            }
+            $html .= '</h3></div>';
+        }else{
+            $html= '<div class="panel-heading">';
+            if (!empty($cardBrand)) {
+                $html .= "Bambora Checkout ({$cardBrand})";
+            } else {
+                $html .= "Bambora Checkout";
+            }
+            $html .= '</div>';
+        }
 
+        return $html;
+    }
     /**
      * Build Bambora Container Start Tag
      *
@@ -818,18 +899,28 @@ class Bambora extends PaymentModule
      */
     private function buildBamboraContainerStartTag()
     {
-        $html = '<script type="text/javascript" src="'.$this->_path.'views/js/bamboraScripts.js" charset="UTF-8"></script>';
+        if ($this->isPsVersionHigherThan177()){
+            $html = '<script type="text/javascript" src="'.$this->_path.'views/js/bamboraScripts177.js" charset="UTF-8"></script>';
+        }else{
+            $html = '<script type="text/javascript" src="'.$this->_path.'views/js/bamboraScripts.js" charset="UTF-8"></script>';
+        }
         if ($this->getPsVersion() === $this::V15) {
             $html .= '<style type="text/css">
                             .table td{white-space:nowrap;overflow-x:auto;}
                         </style>';
             $html .= '<br /><fieldset><legend><img src="../img/admin/money.gif">Bambora Checkout</legend>';
-        } else {
+        } elseif ($this->getPsVersion() === $this::V16){
             $html .= '<div class="row" >';
             $html .= '<div class="col-lg-12">';
             $html .= '<div class="panel bambora-width-all-space" style="overflow:auto">';
+        }elseif ($this->isPsVersionHigherThan177()){
+                $html .= '<div class="card mt-2>';
+                $html .= '<div class="card-body">';
+        }else{
+                $html .= '<div class="card mt-2>';
+                $html .= '<div class="row">';
+                $html .= '<div class="col-md-6" style="overflow:auto">';
         }
-
         return $html;
     }
 
@@ -842,6 +933,9 @@ class Bambora extends PaymentModule
     {
         if ($this->getPsVersion() === $this::V15) {
             $html = "</fieldset>";
+        }elseif ($this->isPsVersionHigherThan177()){
+            $html = "</div>";
+            $html .= "</div>";
         } else {
             $html = "</div>";
             $html .= "</div>";
@@ -880,21 +974,38 @@ class Bambora extends PaymentModule
             $transactionInfo = $bamboraTransaction["transaction"];
             $transactionOperations = $bamboraTransactionOperations["transactionoperations"];
             $currency = new Currency($order->id_currency);
-            $html .= '<div class="row">
+            if ($this->isPsVersionHigherThan177()){
+                $html .= '<div class="card-body">
+
+                        <div class="card">'
+                    .$this->buildPaymentTable($transactionInfo, $currency)
+                    .$this->buildButtonsForm($transactionInfo)
+                    .'</div>
+
+                        <div class="card">'
+                    .$this->createCheckoutTransactionOperationsHtml($transactionOperations, $currency)
+                    .'</div>
+                      </div>'
+                    .'</div>';
+            }else{
+                $html .= '<div class="row">
 
                         <div class="col-xs-12 col-sm-12 col-md-4 col-lg-3">'
-                            .$this->buildPaymentTable($transactionInfo, $currency)
-                            .$this->buildButtonsForm($transactionInfo)
-                        .'</div>
+                    .$this->buildPaymentTable($transactionInfo, $currency)
+                    .$this->buildButtonsForm($transactionInfo)
+                    .'</div>
 
                         <div class="col-xs-12 col-sm-12 col-md-8 col-lg-6">'
-                            .$this->createCheckoutTransactionOperationsHtml($transactionOperations, $currency)
-                        .'</div>
+                    .$this->createCheckoutTransactionOperationsHtml($transactionOperations, $currency)
+                    .'</div>
 
                         <div class="col-lg-3 text-center hidden-xs hidden-sm hidden-md">'
-                            .$this->buildLogodiv()
-                        .'</div>'
+                      .$this->buildLogodiv()
+                    .'</div>'
                     .'</div>';
+            }
+
+
         } catch (Exception $e) {
             $this->displayError($e->getMessage());
         }
@@ -1096,7 +1207,7 @@ class Bambora extends PaymentModule
     private function buildLogodiv()
     {
         $html = '<a href="https://merchant.bambora.com" alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">';
-        $html .= '<img class="bambora-logo" src="../modules/' . $this->name . '/views/img/bambora.svg" />';
+        $html .= '<img class="bambora-logo" src="https://d3r1pwhfz7unl9.cloudfront.net/bambora/bambora-logo.svg" width="150px;" />';
         $html .= '</a>';
         $html .= '<div><br/><a href="https://merchant.bambora.com"  alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">' .$this->l('Go to Bambora Merchant Administration') .'</a></div>';
 
@@ -1120,6 +1231,7 @@ class Bambora extends PaymentModule
         $tooltip = $this->l('Example: 1234.56');
         if (!$editable) {
             $readonly = "readonly";
+            $tooltip = '';
             if ($type == "credit") {
                 $tooltip = $this->l('With Payment Provider Collector Bank only full refund is possible here. For partial refund, please use Bambora Merchant Portal.');
             }
@@ -1134,14 +1246,36 @@ class Bambora extends PaymentModule
         }else{
             $isCollector = 1;
         }
-
-        $html = '<div>
+        if ($this->isPsVersionHigherThan177()){
+            $html = '<div>
+                    <div style="margin-left:20px;">
+                        <div class="bambora-confirm-frame">
+                            <input  class="'.$class.'" name="unhide-'.$type.'" type="button" value="' . Tools::strtoupper($value) . '" />
+                       </div>
+                        <div class="row bambora-hidden bambora-button-frame-increesed-size" data-hasinputfield="'.$addInputField .'">'
+                .'<div class="col-xs-3">
+                                <a class="bambora-cancel"></a>
+                             </div>
+                             <div class="col-xs-5">
+                                <input name ="bambora-isCollector" value ="'.$isCollector.'" type="hidden"/>
+                                <input id="bambora-action-input" type="text"   required="required" '.$readonly.' name="bambora-'.$type.'-value" value="'.$valueOfInputfield .'" data-placement="right" />
+                               <p>'. $currencycode.'</p>
+                               <p><em>'. $tooltip.'</em></p>
+                            </div>
+                             <div class="col-xs-4">
+                                <input class="'.$class.'" name="bambora-'.$type.'" type="submit" value="' .Tools::strtoupper($value) . '" />
+                             </div>
+                         </div>
+                      </div>
+                   </div>';
+        }else{
+            $html = '<div>
                     <div class="bambora-float-left">
                         <div class="bambora-confirm-frame">
                             <input  class="'.$class.'" name="unhide-'.$type.'" type="button" value="' . Tools::strtoupper($value) . '" />
                        </div>
                         <div class="bambora-button-frame bambora-hidden bambora-button-frame-increesed-size row" data-hasinputfield="'.$addInputField .'">'
-                            .'<div class="col-xs-3">
+                .'<div class="col-xs-3">
                                 <a class="bambora-cancel"></a>
                              </div>
                              <div class="col-xs-5">
@@ -1155,7 +1289,7 @@ class Bambora extends PaymentModule
                          </div>
                       </div>
                    </div>';
-
+        }
         return $html;
     }
 
@@ -1169,9 +1303,15 @@ class Bambora extends PaymentModule
      */
     private function buildTransactionControl($type, $value, $class)
     {
-        $html = '<div>
-                   <div class="bambora-float-left">
-                       <div class="bambora-confirm-frame">
+
+        if ($this->isPsVersionHigherThan177()){
+            $html = '<div>
+                   <div style="margin-left:20px;">';
+        }else {
+            $html = '<div>
+                   <div class="bambora-float-left">';
+        }
+        $html .= '<div class="bambora-confirm-frame">
                            <input  class="'.$class.'" name="unhide-'.$type.'" type="button" value="' .Tools::strtoupper($value) . '" />
                       </div>
                       <div class="bambora-button-frame bambora-hidden bambora-normalSize row" data-hasinputfield="false">
@@ -1184,7 +1324,6 @@ class Bambora extends PaymentModule
                       </div>
                    </div>
                 </div>';
-
         return $html;
     }
 
@@ -1824,8 +1963,21 @@ class Bambora extends PaymentModule
             return $this::V15;
         } elseif (_PS_VERSION_ >= "1.6.0.0" && _PS_VERSION_ < "1.7.0.0") {
             return $this::V16;
-        } else {
+        }  else {
             return $this::V17;
+        }
+    }
+    /**
+     * Get Ps Version
+     *
+     * @return string
+     */
+    public function isPsVersionHigherThan177()
+    {
+        if ( _PS_VERSION_ < "1.7.7.0") {
+            return false;
+        } else {
+            return true;
         }
     }
     public function writeLogEntry($message, $severity)
