@@ -786,10 +786,43 @@ class Bambora extends PaymentModule
             return "";
         }
 
-        $transactionId = $payments[0]->transaction_id;
-        $paymentType = $payments[0]->card_brand;
-        $truncatedCardNumber = $payments[0]->card_number;
 
+        if ( isset($payments[0]->transaction_id) && $payments[0]->transaction_id != "" ) {
+            $transactionId = $payments[0]->transaction_id;
+        } else {
+            if (Tools::getIsset('txnid')) {
+                $transactionId = Tools::getValue("txnid");
+            } else {
+                $transactionId = "";
+            }
+        }
+
+        if ( isset($payments[0]->card_brand) && $payments[0]->card_brand != "") {
+            $paymentType = $payments[0]->card_brand;
+        } else {
+            if ( strpos( $payments[0]->payment_method, "Bambora Online Checkout" ) === 0 ) {
+                $apiKey = BamboraHelpers::generateApiKey();
+                $api = new BamboraApi($apiKey);
+                $bamboraTransaction = $api->gettransaction($transactionId);
+                $bamboraTransactionInfo = $bamboraTransaction['transaction'];
+                if ( isset( $bamboraTransactionInfo['information']['paymenttypes'][0] ) ) {
+                    $paymentType = $bamboraTransactionInfo['information']['paymenttypes'][0]['displayname'];
+                } else {
+                    $paymentType = $payments[0]->payment_method;
+                }
+            } else {
+                $paymentType = $payments[0]->payment_method;
+            }
+        }
+        if ( isset($payments[0]->card_number) && $payments[0]->card_number!= "" ) {
+            $truncatedCardNumber = $payments[0]->card_number;
+        } else {
+            if (Tools::getIsset('cardno')) {
+                $truncatedCardNumber = Tools::getValue("cardno");
+            } else {
+                $truncatedCardNumber = "";
+            }
+        }
         $formattedCardnumber = BamboraHelpers::formatTruncatedCardnumber($truncatedCardNumber);
 
         $result = '<table>';
