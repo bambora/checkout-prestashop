@@ -950,9 +950,9 @@ class Bambora extends PaymentModule
                 $html .= '<div class="card mt-2>';
                 $html .= '<div class="card-body">';
         }else{
-                $html .= '<div class="card mt-2>';
-                $html .= '<div class="row">';
-                $html .= '<div class="col-md-6" style="overflow:auto">';
+            $html .= '<div class="row" >';
+            $html .= '<div class="col-lg-12">';
+            $html .= '<div class="panel bambora-width-all-space" style="overflow:auto">';
         }
         return $html;
     }
@@ -1010,12 +1010,12 @@ class Bambora extends PaymentModule
             if ($this->isPsVersionHigherThan177()){
                 $html .= '<div class="card-body">
 
-                        <div class="card">'
+                        <div>'
                     .$this->buildPaymentTable($transactionInfo, $currency)
                     .$this->buildButtonsForm($transactionInfo)
                     .'</div>
 
-                        <div class="card">'
+                        <div class="">'
                     .$this->createCheckoutTransactionOperationsHtml($transactionOperations, $currency)
                     .'</div>
                       </div>'
@@ -1239,10 +1239,10 @@ class Bambora extends PaymentModule
      */
     private function buildLogodiv()
     {
-        $html = '<a href="https://merchant.bambora.com" alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">';
+        $html = '<a href="https://reports.bambora.com" alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">';
         $html .= '<img class="bambora-logo" src="https://d3r1pwhfz7unl9.cloudfront.net/bambora/bambora-logo.svg" width="150px;" />';
         $html .= '</a>';
-        $html .= '<div><br/><a href="https://merchant.bambora.com"  alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">' .$this->l('Go to Bambora Merchant Administration') .'</a></div>';
+        $html .= '<div><br/><a href="https://reports.bambora.com"  alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">' .$this->l('Go to Bambora Merchant Administration') .'</a></div>';
 
         return $html;
     }
@@ -1280,23 +1280,23 @@ class Bambora extends PaymentModule
             $isCollector = 1;
         }
         if ($this->isPsVersionHigherThan177()){
-            $html = '<div>
-                    <div style="margin-left:20px;">
-                        <div class="bambora-confirm-frame">
-                            <input  class="'.$class.'" name="unhide-'.$type.'" type="button" value="' . Tools::strtoupper($value) . '" />
+            $html = '<div style="float:left;">
+                    <div style="margin-left:20px;"  style="float:left;">
+                        <div class="bambora-confirm-frame" style="float:left; padding-right: 10px;">
+                            <input  class="'.$class.'" name="unhide-'.$type.'" type="button" value="' . Tools::strtoupper($value) . '"  style="width: 90px;"  />
                        </div>
-                        <div class="row bambora-hidden bambora-button-frame-increesed-size" data-hasinputfield="'.$addInputField .'">'
-                .'<div class="col-xs-3">
-                                <a class="bambora-cancel"></a>
+                        <div class="row bambora-hidden bambora-button-frame-increesed-size" data-hasinputfield="'.$addInputField .'" style="float:left; width: 380px !important; padding-right: 10px;">
+                            <div class="col-xs-3 " style="float:left; padding-right: 10px;">
+                                <a class="bambora-cancel" style="float:left;"></a>
                              </div>
-                             <div class="col-xs-5">
+                             <div class="col-xs-5" style="float:left; padding-right: 10px;">
                                 <input name ="bambora-isCollector" value ="'.$isCollector.'" type="hidden"/>
                                 <input id="bambora-action-input" type="text"   required="required" '.$readonly.' name="bambora-'.$type.'-value" value="'.$valueOfInputfield .'"  />
                                <p>'. $currencycode.'</p>
                                <p><em>'. $tooltip.'</em></p>
                             </div>
-                             <div class="col-xs-4">
-                                <input class="'.$class.'" name="bambora-'.$type.'" type="submit" value="' .Tools::strtoupper($value) . '" />
+                             <div class="col-xs-4" style="float:left; padding-right: 10px;">
+                                <input class="'.$class.'" name="bambora-'.$type.'" type="submit" value="' .Tools::strtoupper($value).'  style="width: 90px;" />
                              </div>
                          </div>
                       </div>
@@ -1337,14 +1337,26 @@ class Bambora extends PaymentModule
     private function buildTransactionControl($type, $value, $class)
     {
 
-        if ($this->isPsVersionHigherThan177()){
-            $html = '<div>
+        if ( $this->isPsVersionHigherThan177() ) {
+            $html = '<div style="float:left;"> 
                    <div style="margin-left:20px;">';
-        }else {
+            $html .= '<div class="bambora-confirm-frame" style="float:left;">
+                           <input  class="'.$class.'" name="unhide-'.$type.'" type="button" value="' .Tools::strtoupper($value) . '" />
+                      </div>
+                      <div class="bambora-button-frame bambora-hidden bambora-normalSize row" data-hasinputfield="false" style="float:left;">
+                           <div class="col-xs-6" style="float:left;">
+                               <a class="bambora-cancel"></a>
+                          </div>
+                          <div class="col-xs-6" style="float:left;">
+                             <input class="'.$class.'" name="bambora-'.$type.'" type="submit" value="'  .Tools::strtoupper($value) . '" />
+                          </div>
+                      </div>
+                   </div>
+                </div>';
+        } else {
             $html = '<div>
                    <div class="bambora-float-left">';
-        }
-        $html .= '<div class="bambora-confirm-frame">
+            $html .= '<div class="bambora-confirm-frame">
                            <input  class="'.$class.'" name="unhide-'.$type.'" type="button" value="' .Tools::strtoupper($value) . '" />
                       </div>
                       <div class="bambora-button-frame bambora-hidden bambora-normalSize row" data-hasinputfield="false">
@@ -1357,6 +1369,7 @@ class Bambora extends PaymentModule
                       </div>
                    </div>
                 </div>';
+        }
         return $html;
     }
 
