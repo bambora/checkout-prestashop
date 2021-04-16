@@ -1285,18 +1285,18 @@ class Bambora extends PaymentModule
                         <div class="bambora-confirm-frame" style="float:left; padding-right: 10px;">
                             <input  class="'.$class.'" name="unhide-'.$type.'" type="button" value="' . Tools::strtoupper($value) . '"  style="width: 90px;"  />
                        </div>
-                        <div class="row bambora-hidden bambora-button-frame-increesed-size" data-hasinputfield="'.$addInputField .'" style="float:left; width: 380px !important; padding-right: 10px;">
-                            <div class="col-xs-3 " style="float:left; padding-right: 10px;">
+                        <div class="row bambora-hidden bambora-button-frame-177" data-hasinputfield="'.$addInputField .'" style="">
+                            <div class="col-xs-3 " style="float:left; padding-right: 10px;padding-top:5px;">
                                 <a class="bambora-cancel" style="float:left;"></a>
                              </div>
-                             <div class="col-xs-5" style="float:left; padding-right: 10px;">
+                             <div class="col-xs-5" style="float:left; padding-right: 10px; padding-top:5px;">
                                 <input name ="bambora-isCollector" value ="'.$isCollector.'" type="hidden"/>
                                 <input id="bambora-action-input" type="text"   required="required" '.$readonly.' name="bambora-'.$type.'-value" value="'.$valueOfInputfield .'"  />
                                <p>'. $currencycode.'</p>
                                <p><em>'. $tooltip.'</em></p>
                             </div>
                              <div class="col-xs-4" style="float:left; padding-right: 10px;">
-                                <input class="'.$class.'" name="bambora-'.$type.'" type="submit" value="' .Tools::strtoupper($value).'  style="width: 90px;" />
+                                <input class="'.$class.'" name="bambora-'.$type.'" type="submit" value="' .Tools::strtoupper($value).'"  style="width: 90px;" />
                              </div>
                          </div>
                       </div>

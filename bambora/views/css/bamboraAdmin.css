@@ -155,7 +155,9 @@
 
 .bambora-button-frame-177 div p {
     display: inline-block;
-    padding: 5px;
+    padding-top: 3px;
+    padding-left: 5px;
+    padding-right: 5px;
 }
 .bambora-button-frame-increesed-size {
     width: 280px !important;
