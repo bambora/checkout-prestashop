@@ -127,7 +127,36 @@
 .bamboraButtonFrame span {
     padding-left: 20px;
 }
+.bambora-button-frame-177{
+    width: 480px !important;
+    float:left;
+    padding-right: 10px;
+    padding-top: 10px;
+}
+.bambora-button-frame-177 div input{
+    text-align: right;
+    float: right;
+}
 
+.bambora-button-frame-177 div input {
+    text-align: right;
+    font-weight: normal;
+    width: 90px !important;
+    float: right;
+}
+
+.bambora-button-frame-177 div input[type='text'] {
+    background-color: white;
+    display: inline-block;
+    width: 90px;
+    vertical-align: bottom;
+    float: left;
+}
+
+.bambora-button-frame-177 div p {
+    display: inline-block;
+    padding: 5px;
+}
 .bambora-button-frame-increesed-size {
     width: 280px !important;
 }
