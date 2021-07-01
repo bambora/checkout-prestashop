@@ -16,3 +16,5 @@ bambora/views/.DS_Store
 .idea/workspace.xml
 
 bambora/config_sv.xml
+
+.DS_Store
