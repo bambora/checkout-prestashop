@@ -25,7 +25,7 @@ class Bambora extends PaymentModule
 {
     private $apiKey;
 
-    const MODULE_VERSION = '1.8.2';
+    const MODULE_VERSION = '1.9.0';
     const V15 = '15';
     const V16 = '16';
     const V17 = '17';
@@ -34,7 +34,7 @@ class Bambora extends PaymentModule
     {
         $this->name = 'bambora';
         $this->tab = 'payments_gateways';
-        $this->version = '1.8.2';
+        $this->version = '1.9.0';
         $this->author = 'Bambora Online A/S';
 
         $this->ps_versions_compliancy = array('min' => '1.5', 'max' => _PS_VERSION_);
@@ -1270,9 +1270,9 @@ class Bambora extends PaymentModule
 
                 $res .= '<td>' . $operation["id"] . '</td>';
 
-            if (key_exists("parenttransactionoperationid", $operation) &&  $operation["parenttransactionoperationid"] > 0) {
-                $res .= '<td>' . $operation["parenttransactionoperationid"] .'</td>';
-            } else {
+                if (key_exists("parenttransactionoperationid", $operation) &&  $operation["parenttransactionoperationid"] > 0) {
+                    $res .= '<td>' . $operation["parenttransactionoperationid"] .'</td>';
+                } else {
                     $res .= '<td> - </td>';
                 }
 
