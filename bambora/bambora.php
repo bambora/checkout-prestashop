@@ -121,16 +121,23 @@ class Bambora extends PaymentModule
             $merchantnumber = (string)Tools::getValue('BAMBORA_MERCHANTNUMBER');
             $accesstoken = (string)Tools::getValue("BAMBORA_ACCESSTOKEN");
             $secrettoken = (string)Tools::getValue("BAMBORA_SECRETTOKEN");
+            $allowLowValue = Tools::getValue("BAMBORA_ALLOW_LOW_VALUE_EXEMPTION");
+            $limitLowValueExemption = (string)Tools::getValue("BAMBORA_LIMIT_FOR_LOW_VALUE_EXEMPTION");
             if (empty($merchantnumber) || !Validate::isGenericName($merchantnumber)) {
                 $output .= $this->displayError('Merchant number '.$this->l('is required. If you do not have one please contact Bambora in order to obtain one!'));
             } elseif (empty($accesstoken) || !Validate::isGenericName($accesstoken)) {
                 $output .= $this->displayError('Access token '.$this->l('is required. If you do not have one please contact Bambora in order to obtain one!'));
-            } elseif (empty($secrettoken) || !Validate::isGenericName($secrettoken)) {
+            } elseif ( !Validate::isGenericName($secrettoken) && empty(Configuration::get('BAMBORA_SECRETTOKEN'))) {
                 $output .= $this->displayError('Secret token '.$this->l('is required. If you do not have one please contact Bambora in order to obtain one!'));
-            } else {
+            } elseif (!Validate::isPrice($limitLowValueExemption) && $allowLowValue) {
+                $output .= $this->displayError('If you allow low value exemptions you need to set a limit here that is valid');
+            }
+            else {
                 Configuration::updateValue('BAMBORA_MERCHANTNUMBER', $merchantnumber);
                 Configuration::updateValue('BAMBORA_ACCESSTOKEN', $accesstoken);
-                Configuration::updateValue('BAMBORA_SECRETTOKEN', $secrettoken);
+                if (!empty($secrettoken) ){
+                    Configuration::updateValue('BAMBORA_SECRETTOKEN', $secrettoken);
+                }
                 Configuration::updateValue('BAMBORA_MD5KEY', Tools::getValue("BAMBORA_MD5KEY"));
                 Configuration::updateValue('BAMBORA_PAYMENTWINDOWID', Tools::getValue("BAMBORA_PAYMENTWINDOWID"));
                 Configuration::updateValue('BAMBORA_TITLE', Tools::getValue("BAMBORA_TITLE"));
@@ -143,6 +150,8 @@ class Bambora extends PaymentModule
                 Configuration::updateValue('BAMBORA_CAPTURE_ON_STATUS', serialize(Tools::getValue("BAMBORA_CAPTURE_ON_STATUS")));
                 Configuration::updateValue('BAMBORA_AUTOCAPTURE_FAILUREEMAIL', Tools::getValue("BAMBORA_AUTOCAPTURE_FAILUREEMAIL"));
                 Configuration::updateValue('BAMBORA_ROUNDING_MODE', Tools::getValue("BAMBORA_ROUNDING_MODE"));
+                Configuration::updateValue('BAMBORA_ALLOW_LOW_VALUE_EXEMPTION', Tools::getValue("BAMBORA_ALLOW_LOW_VALUE_EXEMPTION"));
+                Configuration::updateValue('BAMBORA_LIMIT_FOR_LOW_VALUE_EXEMPTION', Tools::getValue("BAMBORA_LIMIT_FOR_LOW_VALUE_EXEMPTION"));
                 $output .= $this->displayConfirmation($this->l('Settings updated'));
             }
         }
@@ -201,7 +210,7 @@ class Bambora extends PaymentModule
                     'required' => true
                 ),
                 array(
-                    'type' => 'text',
+                    'type' => 'password',
                     'label' => 'Secret token',
                     'name' => 'BAMBORA_SECRETTOKEN',
                     'size' => 40,
@@ -310,6 +319,21 @@ class Bambora extends PaymentModule
                        'name' => 'name'
                     )
                 ),
+                array(
+                    'type' => 'switch',
+                    'label' => 'Enable Low Value Exemption',
+                    'name' => 'BAMBORA_ALLOW_LOW_VALUE_EXEMPTION',
+                    'required' => false,
+                    'is_bool' => true,
+                    'values' => $switch_options
+                ),
+                array(
+                    'type' => 'text',
+                    'label' => 'Max Amount for Low Value Exemption',
+                    'name' => 'BAMBORA_LIMIT_FOR_LOW_VALUE_EXEMPTION',
+                    'size' => 10,
+                    'required' => false
+                ),
             ),
             'submit' => array(
                 'title' => $this->l('Save'),
@@ -369,6 +393,8 @@ class Bambora extends PaymentModule
         $helper->fields_value['BAMBORA_CAPTURE_ON_STATUS[]'] = unserialize(Configuration::get('BAMBORA_CAPTURE_ON_STATUS'));
         $helper->fields_value['BAMBORA_AUTOCAPTURE_FAILUREEMAIL'] = Configuration::get('BAMBORA_AUTOCAPTURE_FAILUREEMAIL');
         $helper->fields_value['BAMBORA_ROUNDING_MODE'] = Configuration::get('BAMBORA_ROUNDING_MODE');
+        $helper->fields_value['BAMBORA_ALLOW_LOW_VALUE_EXEMPTION'] = Configuration::get('BAMBORA_ALLOW_LOW_VALUE_EXEMPTION');
+        $helper->fields_value['BAMBORA_LIMIT_FOR_LOW_VALUE_EXEMPTION'] = Configuration::get('BAMBORA_LIMIT_FOR_LOW_VALUE_EXEMPTION');
         $html =   '<div class="row">
                     <div class="col-xs-12 col-sm-12 col-md-7 col-lg-7 ">'
                            .$helper->generateForm($fields_form)
@@ -475,6 +501,17 @@ class Bambora extends PaymentModule
                         <div>
                             <h4>Rounding mode</h4>
                             <p>Please select how you want the rounding of the amount sent to the payment system</p>
+                        </div>
+                          <br />
+                        <div>
+                            <h4>Enable Low Value Exemption</h4>
+                            <p>Allow you as a merchant to skip Strong Customer Authentication (SCA) when the value of the order is below your defined limit. <strong>Note:</strong> the liability will be on you as a merchant.</p>
+                        </div>
+                          <br />
+                        <div>
+                            <h4>Max Amount for Low Value Exemption</h4>
+                            <p>Any amount below this max amount might skip SCA if the issuer would allow it. Recommended amount is about €30 in your local currency. <br /><a href="https://developer.bambora.com/europe/checkout/psd2/lowvalueexemption"  target="_blank">See more information here.</a></p>
+                            <p>Only active if <b>"Enable Low Value Exemption"</b> is set to yes.</p>
                         </div>
                         <br />
                    </div>';
@@ -1075,7 +1112,12 @@ class Bambora extends PaymentModule
         $html .= '<tr><td>'. $this->l('Cardnumber').':</td><td>' .$formattedCardnumber .'</td></tr>';
 
         $html .='<tr><td>'. $this->l('Status') .':</td><td>'. $this->checkoutStatus($transactionInfo["status"]).'</td></tr>';
+        $html .='<tr><td>'. $this->l('ECI') .':</td><td>'. $this->getLowestECI($transactionInfo["information"]["ecis"]).'</td></tr>';
 
+        $distinctExemptions = $this->getDistinctExemptions($transactionInfo["information"]["exemptions"]);
+        if ($distinctExemptions!="" && $distinctExemptions != null) {
+            $html .='<tr><td>'. $this->l('Exemptions') .':</td><td>'. $this->getDistinctExemptions($transactionInfo["information"]["exemptions"]).'</td></tr>';
+        }
         $html .= '</table>';
 
         return $html;
@@ -1097,6 +1139,22 @@ class Bambora extends PaymentModule
         $result = str_replace($firstLetter, $firstLetterToUpper, $status);
 
         return $result;
+    }
+
+    private function getDistinctExemptions($exemptions)
+    {
+        $exemptionValues = null;
+        foreach ($exemptions as $exemption) {
+            $exemptionValues[] = $exemption['value'];
+        }
+        return implode( ",", array_unique($exemptionValues));
+    }
+    private function getLowestECI($ecis)
+    {
+        foreach ($ecis as $eci) {
+            $eciValues[] = $eci['value'];
+        }
+        return min($eciValues);
     }
 
     private function buildButtonsForm($transactionInfo)
@@ -1176,11 +1234,10 @@ class Bambora extends PaymentModule
         $res .= '<th>'.$this->l('Date').'</th>';
         $res .= '<th>'.$this->l('Action').'</th>';
         $res .= '<th>'.$this->l('Amount').'</th>';
-        $res .= '<th>'.$this->l('ECI').'</th>';
         $res .= '<th>'.$this->l('Operation ID').'</th>';
         $res .= '<th>'.$this->l('Parent Operation ID').'</th>';
 
-        $res .= $this->createTranactionOperationItems($transactionOperations, $currency);
+        $res .= $this->createTransactionOperationItems($transactionOperations, $currency);
 
         $res .= '</table>';
 
@@ -1188,49 +1245,57 @@ class Bambora extends PaymentModule
     }
 
     /**
-     * Create Tranaction Operation Items
+     * Create Transaction Operation Items
      *
      * @param mixed $transactionOperations
      * @param mixed $currency
      * @return string
      */
-    private function createTranactionOperationItems($transactionOperations, $currency)
+    private function createTransactionOperationItems($transactionOperations, $currency)
     {
         $res = "";
         foreach ($transactionOperations as $operation) {
-            $res .= '<tr>';
-            $date = str_replace("T", " ", Tools::substr($operation["createddate"], 0, 19));
-            $res .= '<td>' . Tools::displayDate($date).'</td>' ;
-            $res .= '<td>' . $operation["action"]  .'</td>';
-            if ($operation["amount"] > 0) {
-                $amount = BamboraCurrency::convertPriceFromMinorUnits($operation["amount"], $operation["currency"]["minorunits"]);
-                $res .= '<td>' .Tools::displayPrice((float)$amount, $currency) . '</td>';
-            } else {
-                $res .= '<td> - </td>';
-            }
+            $eventInfo = BamboraHelpers::getEventText($operation);
+            if ($eventInfo['description'] != null){
+                $res .= '<tr>';
+                $date = str_replace("T", " ", Tools::substr($operation["createddate"], 0, 19));
+                $res .= '<td>' . Tools::displayDate($date).'</td>' ;
+                $res .= '<td><strong>' .  $eventInfo['title']  .'</strong></td>';
+                if ($operation["amount"] > 0) {
+                    $amount = BamboraCurrency::convertPriceFromMinorUnits($operation["amount"], $operation["currency"]["minorunits"]);
+                    $res .= '<td>' .Tools::displayPrice((float)$amount, $currency) . '</td>';
+                } else {
+                    $res .= '<td> &nbsp; </td>';
+                }
 
-            if (key_exists("ecis", $operation) && is_array($operation["ecis"]) && count($operation["ecis"])> 0) {
-                $res .= '<td>' . $operation["ecis"][0]["value"] .'</td>';
-            } else {
-                $res .= '<td> - </td>';
-            }
-
-            $res .= '<td>' . $operation["id"] . '</td>';
+                $res .= '<td>' . $operation["id"] . '</td>';
 
             if (key_exists("parenttransactionoperationid", $operation) &&  $operation["parenttransactionoperationid"] > 0) {
                 $res .= '<td>' . $operation["parenttransactionoperationid"] .'</td>';
             } else {
-                $res .= '<td> - </td>';
-            }
+                    $res .= '<td> - </td>';
+                }
 
-            if (key_exists("transactionoperations", $operation) && count($operation["transactionoperations"]) > 0) {
-                $res .= $this->createTranactionOperationItems($operation["transactionoperations"], $currency);
+                $res .= '</tr>';
+                $res .= '<tr>';
+                $res .= '<td colspan="5"><i>' . $eventInfo['description'] .'</i></td>';
+                $res .= '</tr>';
+                if (key_exists("transactionoperations", $operation) && count($operation["transactionoperations"]) > 0) {
+                    $res .= $this->createTransactionOperationItems($operation["transactionoperations"], $currency);
+                }
+
+            } else{
+                if (key_exists("transactionoperations", $operation) && count($operation["transactionoperations"]) > 0) {
+                    $res .= $this->createTransactionOperationItems($operation["transactionoperations"], $currency);
+                }
             }
-            $res .= '</tr>';
         }
 
         return $res;
     }
+
+
+
 
     /**
      * Build Logo Div
@@ -1239,10 +1304,10 @@ class Bambora extends PaymentModule
      */
     private function buildLogodiv()
     {
-        $html = '<a href="https://reports.bambora.com" alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">';
+        $html = '<a href="https://merchant.bambora.com" alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">';
         $html .= '<img class="bambora-logo" src="https://d3r1pwhfz7unl9.cloudfront.net/bambora/bambora-logo.svg" width="150px;" />';
         $html .= '</a>';
-        $html .= '<div><br/><a href="https://reports.bambora.com"  alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">' .$this->l('Go to Bambora Merchant Administration') .'</a></div>';
+        $html .= '<div><br/><a href="https://merchant.bambora.com"  alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">' .$this->l('Go to Bambora Merchant Administration') .'</a></div>';
 
         return $html;
     }
@@ -1635,19 +1700,24 @@ class Bambora extends PaymentModule
         $invoiceAddress = new Address((int)$cart->id_address_invoice);
         $deliveryAddress = new Address((int)$cart->id_address_delivery);
 
-        $bamboraCustommer = $this->createBamboraCustommer($cart, $invoiceAddress);
+        $bamboraCustomer = $this->createBamboraCustommer($cart, $invoiceAddress);
         $bamboraOrder = $this->createBamboraOrder($cart, $invoiceAddress, $deliveryAddress);
         $bamboraUrl = $this->createBamboraUrl();
 
         $language = new Language((int)$cart->id_lang);
 
         $request = new BamboraCheckoutRequest();
-        $request->customer = $bamboraCustommer;
+        $request->customer = $bamboraCustomer;
         $request->instantcaptureamount =  Configuration::get('BAMBORA_INSTANTCAPTURE') == 1 ? $bamboraOrder->total : 0;
         $request->language = str_replace("_", "-", $language->language_code);
         $request->order = $bamboraOrder;
         $request->url = $bamboraUrl;
-
+        if ( Configuration::get('BAMBORA_ALLOW_LOW_VALUE_EXEMPTION')){
+            if ($request->order->total < BamboraCurrency::convertPriceToMinorUnits(Configuration::get('BAMBORA_LIMIT_FOR_LOW_VALUE_EXEMPTION'), BamboraCurrency::getCurrencyMinorunits( $request->order->currency ), Configuration::get('BAMBORA_ROUNDING_MODE')) ){
+                $request->securityexemption = "lowvaluepayment";
+                $request->securitylevel = "none";
+            }
+        }
         $paymentWindowId = Configuration::get('BAMBORA_PAYMENTWINDOWID');
 
         $request->paymentwindowid = is_numeric($paymentWindowId) ?  $paymentWindowId : 1;

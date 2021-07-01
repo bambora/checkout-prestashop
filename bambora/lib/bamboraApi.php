@@ -49,6 +49,12 @@ class BamboraApi
     private $assetsEndpoint;
 
     /**
+     * Data endpoint
+     * @var string
+     */
+    private $dataEndpoint;
+
+    /**
      * __construct
      *
      * @param mixed $apiKey
@@ -60,6 +66,7 @@ class BamboraApi
         $this->transactionEndpoint = BamboraEndpointConfig::getTransactionEndpoint();
         $this->merchantEndpoint = BamboraEndpointConfig::getMerchantEndpoint();
         $this->assetsEndpoint = BamboraEndpointConfig::getCheckoutAssets();
+        $this->dataEndpoint = BamboraEndpointConfig::getDataEndpoint();
     }
 
     /**
@@ -76,6 +83,21 @@ class BamboraApi
         $expresscheckoutresponse = $this ->_callRestService($serviceUrl, $jsonData, "POST");
 
         return json_decode($expresscheckoutresponse, true);
+    }
+
+    /**
+     * getresponsecodedata
+     *
+     * @param string $source
+     * @param string $actionCode
+     * @return mixed
+     */
+    public function getresponsecodedata($source, $actionCode)
+    {
+        $serviceUrl = "{$this->dataEndpoint}/responsecodes/".$source."/".$actionCode;
+        $responseCodeData = $this ->_callRestService($serviceUrl, null, "GET");
+
+        return json_decode($responseCodeData, true);
     }
 
     /**

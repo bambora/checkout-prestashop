@@ -79,4 +79,6 @@ class BamboraCheckoutRequest
     public $order;
     public $url;
     public $paymentwindowid;
+    public $securityexemption;
+    public $securitylevel;
 }
