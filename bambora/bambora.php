@@ -505,7 +505,7 @@ class Bambora extends PaymentModule
                           <br />
                         <div>
                             <h4>Enable Low Value Exemption</h4>
-                            <p>Allow you as a merchant to skip Strong Customer Authentication (SCA) when the value of the order is below your defined limit. <strong>Note:</strong> the liability will be on you as a merchant.</p>
+                            <p>Allow you as a merchant to let the customer attempt to skip Strong Customer Authentication(SCA) when the value of the order is below your defined limit. <strong>Note:</strong> the liability will be on you as a merchant.</p>
                         </div>
                           <br />
                         <div>
