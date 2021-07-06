@@ -25,6 +25,7 @@ class BamboraHelpers
         $merchant = Configuration::get('BAMBORA_MERCHANTNUMBER');
         $accessToken = Configuration::get('BAMBORA_ACCESSTOKEN');
         $secretToken = Configuration::get('BAMBORA_SECRETTOKEN');
+
         $combined = $accessToken . '@' . $merchant .':'. $secretToken;
         $encodedKey = base64_encode($combined);
         $apiKey = 'Basic '.$encodedKey;
@@ -57,6 +58,7 @@ class BamboraHelpers
 
         return $result;
     }
+
     /**
      *  Get the Card Authentication Brand Name
      *
@@ -121,12 +123,12 @@ class BamboraHelpers
      */
     public static function getEventText($operation)
     {
-        $action                = strtolower( $operation['action'] );
-        $subAction             = strtolower( $operation['subaction'] );
-        $approved              = $operation['status'] == 'approved';
+        $action = strtolower($operation['action']);
+        $subAction = strtolower($operation['subaction']);
+        $approved = $operation['status'] == 'approved';
 
         $threeDSecureBrandName = "";
-        $eventInfo             = array();
+        $eventInfo = array();
         $merchantLabel = "";
 
         $source = $operation['actionsource'];
@@ -134,53 +136,45 @@ class BamboraHelpers
         $api = new BamboraApi(BamboraHelpers::generateApiKey());
         $responseCode = $api->getresponsecodedata($source, $actionCode);
 
-        if (isset($responseCode['responsecode']))
-        {
-            $merchantLabel = $responseCode['responsecode']['merchantlabel']  . " - " . $source . " " . $actionCode;
+        if (isset($responseCode['responsecode'])) {
+            $merchantLabel = $responseCode['responsecode']['merchantlabel'] . " - " . $source . " " . $actionCode;
         }
-        if ($action === "authorize")
-        {
-            if (isset( $operation['paymenttype']['id']))
-            {
-                $threeDSecureBrandName = BamboraHelpers::getCardAuthenticationBrandName( $operation['paymenttype']['id'] );
+        if ($action === "authorize") {
+            if (isset($operation['paymenttype']['id'])) {
+                $threeDSecureBrandName = BamboraHelpers::getCardAuthenticationBrandName($operation['paymenttype']['id']);
             }
             // Temporary renaming for Lindorff to Collector Bank require until implemented in Acquire
             $thirdPartyName = $operation['acquirername'];
-            $thirdPartyName = strtolower( $thirdPartyName ) !== "lindorff"
+            $thirdPartyName = strtolower($thirdPartyName) !== "lindorff"
                 ? $thirdPartyName
                 : "Collector Bank";
 
-            switch ($subAction)
-            {
+            switch ($subAction) {
                 case "threed":
                 {
-                    $title       = $approved ? 'Payment completed (' . $threeDSecureBrandName . ')' : 'Payment failed (' . $threeDSecureBrandName . ')';
-                    $eci         = $operation['eci']['value'];
-                    $statusText  = $approved
+                    $title = $approved ? 'Payment completed (' . $threeDSecureBrandName . ')' : 'Payment failed (' . $threeDSecureBrandName . ')';
+                    $eci = $operation['eci']['value'];
+                    $statusText = $approved
                         ? "completed successfully"
                         : "failed";
                     $description = "";
-                    if ( $eci === "7" )
-                    {
+                    if ($eci === "7") {
                         $description = 'Authentication was either not attempted or unsuccessful. Either the card does not support' .
                             $threeDSecureBrandName . ' or the issuing bank does not handle it as a ' .
                             $threeDSecureBrandName . ' payment. Payment ' . $statusText . ' at ECI level ' . $eci;
                     }
-                    if ( $eci === "6" )
-                    {
+                    if ($eci === "6") {
                         $description = 'Authentication was attempted but failed. Either cardholder or card issuing bank is not enrolled for ' .
                             $threeDSecureBrandName . '. Payment ' . $statusText . ' at ECI level ' . $eci;
                     }
-                    if ( $eci === "5" )
-                    {
+                    if ($eci === "5") {
                         $description = $approved
                             ? 'Payment was authenticated at ECI level ' . $eci . ' via ' . $threeDSecureBrandName . ' and ' . $statusText
                             : 'Payment was did not authenticate via ' . $threeDSecureBrandName . ' and ' . $statusText;
                     }
-                    $eventInfo['title']       = $title;
+                    $eventInfo['title'] = $title;
                     $eventInfo['description'] = $description;
-                    if (!$approved)
-                    {
+                    if (!$approved) {
                         $eventInfo['description'] = $eventInfo['description'] . '<div style="color:#E08F95">' . $merchantLabel . '</div>';
                     }
                     return $eventInfo;
@@ -194,7 +188,7 @@ class BamboraHelpers
                     $description = $approved
                         ? 'Payment was completed and authorized via SSL.'
                         : 'Authorization was attempted via SSL, but failed. <div style="color:#E08F95">' . $merchantLabel . '</div>';
-                    $eventInfo['title']       = $title;
+                    $eventInfo['title'] = $title;
                     $eventInfo['description'] = $description;
                     return $eventInfo;
                 }
@@ -207,12 +201,10 @@ class BamboraHelpers
                     $description = $approved
                         ? 'Payment was completed and authorized on a subscription.'
                         : 'Authorization was attempted on a subscription, but failed. <div style="color:#E08F95">' . $merchantLabel . '</div>';
-                    $eventInfo['title']       = $title;
+                    $eventInfo['title'] = $title;
                     $eventInfo['description'] = $description;
-
                     return $eventInfo;
                 }
-
                 case "update":
                 {
                     $title = $approved
@@ -221,54 +213,46 @@ class BamboraHelpers
 
                     $description = $approved
                         ? 'The payment was successfully updated.'
-                        : 'The payment update failed. <div style="color:#E08F95">'. $merchantLabel . '</div>';
+                        : 'The payment update failed. <div style="color:#E08F95">' . $merchantLabel . '</div>';
 
-                    $eventInfo['title']       = $title;
+                    $eventInfo['title'] = $title;
                     $eventInfo['description'] = $description;
-
                     return $eventInfo;
                 }
-
                 case "return":
                 {
-                    $title      = $approved
+                    $title = $approved
                         ? 'Payment completed'
                         : 'Payment failed';
                     $statusText = $approved
                         ? 'successful'
                         : 'failed';
 
-                    $description              = 'Returned from ' . $thirdPartyName . ' authentication with a ' . $statusText . ' authorization.';
-                    $eventInfo['title']       = $title;
+                    $description = 'Returned from ' . $thirdPartyName . ' authentication with a ' . $statusText . ' authorization.';
+                    $eventInfo['title'] = $title;
                     $eventInfo['description'] = $description;
-                    if (!$approved){
+                    if (!$approved) {
                         $eventInfo['description'] = $eventInfo['description'] . '<div style="color:#E08F95">' . $merchantLabel . '</div>';
                     }
                     return $eventInfo;
-
                 }
-
                 case "redirect":
                 {
-                    $statusText               = $approved
+                    $statusText = $approved
                         ? "Successfully"
                         : "Unsuccessfully";
-                    $eventInfo['title']       = 'Redirect to ' . $thirdPartyName;
+                    $eventInfo['title'] = 'Redirect to ' . $thirdPartyName;
                     $eventInfo['description'] = $statusText . ' redirected to ' . $thirdPartyName . ' for authentication.';
-
                     return $eventInfo;
-
                 }
             }
         }
-        if ($action === "capture")
-        {
-            $captureMultiText = ( ($subAction === "multi" || $subAction === "multiinstant") && $operation['currentbalance'] > 0 )
+        if ($action === "capture") {
+            $captureMultiText = (($subAction === "multi" || $subAction === "multiinstant") && $operation['currentbalance'] > 0)
                 ? 'Further captures are possible.'
                 : 'Further captures are no longer possible.';
 
-            switch ($subAction)
-            {
+            switch ($subAction) {
                 case "full":
                 {
                     $title = $approved
@@ -277,9 +261,9 @@ class BamboraHelpers
 
                     $description = $approved
                         ? 'The full amount was successfully captured.'
-                        : 'The capture attempt failed. <div style="color:#E08F95">'. $merchantLabel . '</div>';
+                        : 'The capture attempt failed. <div style="color:#E08F95">' . $merchantLabel . '</div>';
 
-                    $eventInfo['title']       = $title;
+                    $eventInfo['title'] = $title;
                     $eventInfo['description'] = $description;
 
                     return $eventInfo;
@@ -294,7 +278,7 @@ class BamboraHelpers
                         ? 'The full amount was successfully captured.'
                         : 'The instant capture attempt failed. <div style="color:#E08F95">' . $merchantLabel . '</div>';
 
-                    $eventInfo['title']       = $title;
+                    $eventInfo['title'] = $title;
                     $eventInfo['description'] = $description;
 
                     return $eventInfo;
@@ -310,31 +294,29 @@ class BamboraHelpers
                         ? 'The partial amount was successfully captured. ' . $captureMultiText
                         : 'The partial capture attempt failed. <div style="color:#E08F95">' . $merchantLabel . '</div>';
 
-                    $eventInfo['title']       = $title;
+                    $eventInfo['title'] = $title;
                     $eventInfo['description'] = $description;
                     return $eventInfo;
                 }
                 case "partlyinstant":
                 case "multiinstant":
                 {
-                    $title                    = $approved
+                    $title = $approved
                         ? 'Instantly captured partial amount'
                         : 'Instant capture failed';
-                    $description              = $approved
+                    $description = $approved
                         ? 'The partial amount was successfully captured. ' . $captureMultiText
                         : 'The instant partial capture attempt failed. <div style="color:#E08F95">' . $merchantLabel . '</div>';
 
-                    $eventInfo['title']       = $title;
+                    $eventInfo['title'] = $title;
                     $eventInfo['description'] = $description;
                     return $eventInfo;
                 }
             }
         }
 
-        if ( $action === "credit" )
-        {
-            switch ( $subAction )
-            {
+        if ($action === "credit") {
+            switch ($subAction) {
                 case "full":
                 {
                     $title = $approved
@@ -342,9 +324,9 @@ class BamboraHelpers
                         : 'Refund failed';
                     $description = $approved
                         ? 'The full amount was successfully refunded.'
-                        : 'The refund attempt failed. <div style="color:#E08F95">'. $merchantLabel . '</div>';
+                        : 'The refund attempt failed. <div style="color:#E08F95">' . $merchantLabel . '</div>';
 
-                    $eventInfo['title']       = $title;
+                    $eventInfo['title'] = $title;
                     $eventInfo['description'] = $description;
                     return $eventInfo;
                 }
@@ -361,18 +343,16 @@ class BamboraHelpers
 
                     $description = $approved
                         ? 'The amount was successfully refunded. ' . $refundMultiText
-                        : 'The partial refund attempt failed. <div style="color:#E08F95">'. $merchantLabel . '</div>';
+                        : 'The partial refund attempt failed. <div style="color:#E08F95">' . $merchantLabel . '</div>';
 
-                    $eventInfo['title']       = $title;
+                    $eventInfo['title'] = $title;
                     $eventInfo['description'] = $description;
                     return $eventInfo;
                 }
             }
         }
-        if ( $action === "delete" )
-        {
-            switch ($subAction)
-            {
+        if ($action === "delete") {
+            switch ($subAction) {
                 case "instant":
                 {
                     $title = $approved
@@ -383,7 +363,7 @@ class BamboraHelpers
                         ? 'The payment was canceled.'
                         : 'The cancellation failed. <div style="color:#E08F95">' . $merchantLabel . '</div>';
 
-                    $eventInfo['title']       = $title;
+                    $eventInfo['title'] = $title;
                     $eventInfo['description'] = $description;
                     return $eventInfo;
                 }
@@ -397,7 +377,7 @@ class BamboraHelpers
                         ? 'The payment was canceled.'
                         : 'The cancellation failed. <div style="color:#E08F95">' . $merchantLabel . '</div>';
 
-                    $eventInfo['title']       = $title;
+                    $eventInfo['title'] = $title;
                     $eventInfo['description'] = $description;
                     return $eventInfo;
                 }
@@ -405,7 +385,6 @@ class BamboraHelpers
         }
         $eventInfo['title'] = $action . ":" . $subAction;
         $eventInfo['description'] = null;
-
         return $eventInfo;
     }
 }

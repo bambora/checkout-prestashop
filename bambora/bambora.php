@@ -1294,9 +1294,6 @@ class Bambora extends PaymentModule
         return $res;
     }
 
-
-
-
     /**
      * Build Logo Div
      *
