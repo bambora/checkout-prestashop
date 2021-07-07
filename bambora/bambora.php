@@ -25,7 +25,7 @@ class Bambora extends PaymentModule
 {
     private $apiKey;
 
-    const MODULE_VERSION = '1.9.0';
+    const MODULE_VERSION = '1.9.1';
     const V15 = '15';
     const V16 = '16';
     const V17 = '17';
@@ -1025,6 +1025,7 @@ class Bambora extends PaymentModule
     private function getHtmlcontent($transactionId, $order)
     {
         $html = "";
+
         try {
             $apiKey = $this->getApiKey();
             $api = new BamboraApi($apiKey);

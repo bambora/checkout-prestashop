@@ -3,7 +3,7 @@
   "description": "PrestaShop payment module for Bambora Online",
   "homepage": "https://www.bambora.com/sv/se/online/",
   "license": "OSL-3.0",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "authors": [
     {
       "name": "Bambora",
