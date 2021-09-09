@@ -1178,7 +1178,7 @@ class Bambora extends PaymentModule
 
             $availableForCredit = BamboraCurrency::convertPriceFromMinorUnits($transactionInfo["available"]["credit"], $minorUnits);
 
-            if ($this->isCollectorBank($transactionInfo) ){ //Collector Bank
+            if ($this->isCollectorBank($transactionInfo) ){ //Walley (old Collector Bank)
                 $editable = false;
             } else {
                 $editable = true;
@@ -1203,7 +1203,7 @@ class Bambora extends PaymentModule
         return $html;
     }
     /**
-     * Check if transaction is for Collector Bank
+     * Check if transaction is for Walley (old Collector Bank)
      *
      * @param mixed $transactionInfo
      * @return boolean
@@ -1213,7 +1213,7 @@ class Bambora extends PaymentModule
         if (isset($transactionInfo["information"]["paymenttypes"][0])){
             $paymentTypesGroupId = $transactionInfo["information"]["paymenttypes"][0]["groupid"];
             $paymentTypesId = $transactionInfo["information"]["paymenttypes"][0]["id"];
-            if ($paymentTypesGroupId  == 19 && $paymentTypesId == 40 ) { //Collector Bank
+            if ($paymentTypesGroupId  == 19 && $paymentTypesId == 40 ) { //Walley (Collector Bank)
                 return true;
             }
             return false;
@@ -1291,7 +1291,7 @@ class Bambora extends PaymentModule
                 }
             }
         }
-
+        $res = str_replace("CollectorBank", "Walley", $res);
         return $res;
     }
 
@@ -1329,10 +1329,10 @@ class Bambora extends PaymentModule
             $readonly = "readonly";
             $tooltip = '';
             if ($type == "credit") {
-                $tooltip = $this->l('With Payment Provider Collector Bank only full refund is possible here. For partial refund, please use Bambora Merchant Portal.');
+                $tooltip = $this->l('With Payment Provider Walley only full refund is possible here. For partial refund, please use Bambora Merchant Portal.');
             }
             if ($type == "capture") {
-                $tooltip = $this->l('With Payment Provider Collector Bank only full capture is possible here. For partial capture, please use Bambora Merchant Portal.');
+                $tooltip = $this->l('With Payment Provider Walley only full capture is possible here. For partial capture, please use Bambora Merchant Portal.');
             }
         } else {
             $readonly  = "";
