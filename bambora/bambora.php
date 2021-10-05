@@ -1303,8 +1303,9 @@ class Bambora extends PaymentModule
     private function buildLogodiv()
     {
         $html = '<a href="https://merchant.bambora.com" alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">';
-        $html .= '<img class="bambora-logo" src="https://d3r1pwhfz7unl9.cloudfront.net/bambora/bambora-logo.svg" width="150px;" />';
+        $html .= '<img class="bambora-logo" src="https://d3r1pwhfz7unl9.cloudfront.net/bambora/worldline-logo.svg" width="150px;" />';
         $html .= '</a>';
+        $html .= '<br/><div class="worldline-info">'.$this->l('Bambora will now be known as Worldline. Together, we create digital payments for a trusted world.').' </div>';
         $html .= '<div><br/><a href="https://merchant.bambora.com"  alt="" title="' . $this->l('Go to Bambora Merchant Administration') . '" target="_blank">' .$this->l('Go to Bambora Merchant Administration') .'</a></div>';
 
         return $html;

@@ -188,21 +188,27 @@
         font-weight: normal;
         vertical-align: bottom;
     }
-
+.worldline-info{
+    padding-top: 10px;
+    color: #45beaa;
+    font-style: italic;
+}
 .bambora-confirm-btn {
     width: 80px;
-    background-color: #72C279;
+    background-color: #45beaa;
     color: #FCFDFE;
 }
-
+.badge-success{
+    background-color: #45beaa;
+}
 .bambora-credit-btn {
-    background-color: #D9BA73;
-    color: #FCFDFE;
+    background-color: #ffeb78;
+    color: #000000;
     width: 80px;
 }
 
 .bambora-delete-btn {
-    background-color: #E08F95;
+    background-color: #f08791;
     color: #FCFDFE;
     width: 80px;
 }
@@ -370,11 +376,11 @@ a.bambora-cancel:hover {
 }
 
 .bambora-checkmark-circle {
-    background-color: #5cb85c;
+    background-color: #45beaa;
 }
 
 .bambora-exclamation-circle {
-    background-color: #f0ad4e;
+    background-color: #ffeb78;
 }
 
 .bambora-checkmark-stem {
