@@ -678,7 +678,7 @@ class Bambora extends PaymentModule
         $customer = new Customer($order->id_customer);
 
         if ($customer->email) {
-            $this->context->smarty->assign('bambora_completed_emailText', $this->l('An confirmation email has been sendt to:'));
+            $this->context->smarty->assign('bambora_completed_emailText', $this->l('An confirmation email has been sent to:'));
             $this->context->smarty->assign('bambora_completed_emailValue', $customer->email);
         }
 
@@ -834,7 +834,7 @@ class Bambora extends PaymentModule
             }
         }
 
-        if ( isset($payments[0]->card_brand) && $payments[0]->card_brand != "") {
+        if ( isset($payments[0]->card_brand) && $payments[0]->card_brand != "" && $payments[0]->card_brand != "Direct Banking") {
             $paymentType = $payments[0]->card_brand;
         } else {
             if ( strpos( $payments[0]->payment_method, "Bambora Online Checkout" ) === 0 ) {
@@ -846,6 +846,9 @@ class Bambora extends PaymentModule
                     $paymentType = $bamboraTransactionInfo['information']['paymenttypes'][0]['displayname'];
                 } else {
                     $paymentType = $payments[0]->payment_method;
+                }
+                if ( isset( $bamboraTransactionInfo["information"]["acquirerreferences"][0] ) ) {
+                    $acquirerReference =  $bamboraTransactionInfo["information"]["acquirerreferences"][0]["reference"];
                 }
             } else {
                 $paymentType = $payments[0]->payment_method;
@@ -865,8 +868,18 @@ class Bambora extends PaymentModule
         $result = '<table>';
         $result .= '<tr><td colspan="2"><strong>'.$this->l('Payment information').'</strong></td></tr>';
         $result .= '<tr><td>'.$this->l('Transaction id').':</td><td>' .$transactionId .'</td></tr>';
-        $result .= '<tr><td>'.$this->l('Payment type').':</td><td>' .$paymentType .'</td></tr>';
-        $result .= '<tr><td>'.$this->l('Card number').':</td><td>' .$formattedCardnumber .'</td></tr>';
+
+        if (isset($acquirerReference) && $acquirerReference !=""){
+            $result .= '<tr><td>'.$this->l('Acquirer Reference').':</td><td>' .$acquirerReference .'</td></tr>';
+        }
+
+        $result .= '<tr><td>'.$this->l('Payment Type').':</td><td>' .$paymentType .'</td></tr>';
+
+        if ($formattedCardnumber !=""){
+            $result .= '<tr><td>'.$this->l('Card Number').':</td><td>' .$formattedCardnumber .'</td></tr>';
+        }
+
+
         $result .= '</table>';
 
         return $result;
@@ -1049,7 +1062,7 @@ class Bambora extends PaymentModule
                 $html .= '<div class="card-body">
 
                         <div>'
-                    .$this->buildPaymentTable($transactionInfo, $currency)
+                    .$this->buildPaymentTable($transactionInfo, $currency, $transactionOperations)
                     .$this->buildButtonsForm($transactionInfo)
                     .'</div>
 
@@ -1062,7 +1075,7 @@ class Bambora extends PaymentModule
                 $html .= '<div class="row">
 
                         <div class="col-xs-12 col-sm-12 col-md-4 col-lg-3">'
-                    .$this->buildPaymentTable($transactionInfo, $currency)
+                    .$this->buildPaymentTable($transactionInfo, $currency, $transactionOperations)
                     .$this->buildButtonsForm($transactionInfo)
                     .'</div>
 
@@ -1089,15 +1102,30 @@ class Bambora extends PaymentModule
      *
      * @param mixed $transactionInfo
      * @param mixed $currency
+     * @param mixed $transactionOperations
      * @return string
      */
-    private function buildPaymentTable($transactionInfo, $currency)
+    private function buildPaymentTable($transactionInfo, $currency, $transactionOperations)
     {
         $html = '<table class="bambora-table">';
         $html .= '<tr><td colspan="2" class="bambora-table-title"><strong>'.$this->l('Payment'). '</strong></td></tr>';
+        $card_group_id       = $transactionInfo["information"]["paymenttypes"][0]["groupid"];
+        $card_name           = $transactionInfo["information"]["paymenttypes"][0]["displayname"];
+
+        $html .= '<img class="bambora_paymenttype_img" src="https://d3r1pwhfz7unl9.cloudfront.net/paymentlogos/' . $card_group_id . '.svg" alt="' . $card_name . '" title="' . $card_name . '" />';
+        if ( isset( $transactionOperations[0]["transactionoperations"][0]["acquirerdata"][0]["key"]) ) {
+            if ( $transactionOperations[0]["transactionoperations"][0]["acquirerdata"][0]["key"] == "nordeaepaymentfi.customerbank" ) {
+                $bank_name = $transactionOperations[0]["transactionoperations"][0]["acquirerdata"][0]["value"];
+            }
+            if ( isset( $bank_name ) && $bank_name != "" ) {
+                $html .= '<img style="max-height:51px;clear: both;" src="https://d3r1pwhfz7unl9.cloudfront.net/paymentlogos/bank-' . $bank_name . '.svg" alt="' . $bank_name . '" title="' . $bank_name . '" />';
+            }
+        }
+
         $html .= '<tr><td>'. $this->l('Amount') .':</td>';
 
         $html .='<td><div class="badge bambora-badge-big badge-success" title="'. $this->l('Amount available for capture').'">';
+
 
         $amount = BamboraCurrency::convertPriceFromMinorUnits($transactionInfo["total"]["authorized"], $transactionInfo["currency"]["minorunits"]);
 
@@ -1110,10 +1138,21 @@ class Bambora extends PaymentModule
         if (isset($transactionInfo["information"]["primaryaccountnumbers"][0])){
             $formattedCardnumber = BamboraHelpers::formatTruncatedCardnumber($transactionInfo["information"]["primaryaccountnumbers"][0]["number"]);
         }
-        $html .= '<tr><td>'. $this->l('Cardnumber').':</td><td>' .$formattedCardnumber .'</td></tr>';
+        if ($formattedCardnumber != ""){
+            $html .= '<tr><td>'. $this->l('Cardnumber').':</td><td>' .$formattedCardnumber .'</td></tr>';
+        }
+
+        if (isset( $transactionInfo["information"]["acquirerreferences"][0])){
+            $html .='<tr><td>'. $this->l('Acquirer Reference') .':</td><td>'. $transactionInfo["information"]["acquirerreferences"][0]["reference"].'</td></tr>';
+        }
 
         $html .='<tr><td>'. $this->l('Status') .':</td><td>'. $this->checkoutStatus($transactionInfo["status"]).'</td></tr>';
-        $html .='<tr><td>'. $this->l('ECI') .':</td><td>'. $this->getLowestECI($transactionInfo["information"]["ecis"]).'</td></tr>';
+
+        $eci = $this->getLowestECI($transactionInfo["information"]["ecis"]);
+        if ($eci != ""){
+            $html .='<tr><td>'. $this->l('ECI') .':</td><td>'.$eci .'</td></tr>';
+        }
+
 
         $distinctExemptions = $this->getDistinctExemptions($transactionInfo["information"]["exemptions"]);
         if ($distinctExemptions!="" && $distinctExemptions != null) {

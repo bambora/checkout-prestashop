@@ -104,10 +104,17 @@ abstract class BaseAction extends ModuleFrontController
                 if (isset($bamboraTransactionInfo['information']['primaryaccountnumbers'][0])){
                     $truncatedCardNumber = $bamboraTransactionInfo['information']['primaryaccountnumbers'][0]['number'];
                 }
+                $acquirerReference = null;
+                if (isset($bamboraTransactionInfo['information']['acquirerreferences'][0])){
+                    $acquirerReference = $bamboraTransactionInfo['information']['acquirerreferences'][0]['reference'];
+                }
+
 
                 $mailVars = array('TransactionId'=>$transactionId,
                                   'PaymentType'=>$paymentType,
-                                  'CardNumber'=>$truncatedCardNumber);
+                                  'CardNumber'=>$truncatedCardNumber,
+                                   'AcquirerReference'=>$acquirerReference
+                    );
 
                 $minorUnits = $bamboraTransactionInfo["currency"]["minorunits"];
                 $amountInMinorUnits = $bamboraTransactionInfo["total"]["authorized"];
@@ -124,6 +131,7 @@ abstract class BaseAction extends ModuleFrontController
                     $order = new Order($id_order);
                     $payment = $order->getOrderPayments();
                     $payment[0]->transaction_id = $transactionId;
+                    $payment[0]->acquirer_reference = $acquirerReference;
                     $payment[0]->amount = $totalAmount;
                     $payment[0]->card_number = $truncatedCardNumber;
                     $payment[0]->card_brand = $paymentType;
