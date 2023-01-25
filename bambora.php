@@ -737,22 +737,23 @@ class Bambora extends PaymentModule
      * @return string
      */
     public function hookDisplayAdminOrderSideBottom($params)
-    {    $order = new Order($params['id_order']);
+    {    
+        $order = new Order($params['id_order']);
         if ($order->module == $this->name) {
-        $html = '
-        <div class="card mt-2 d-print-none">
-            <div class="card-header">
-                    <h3 class="card-header-title">
-                    Bambora Merchant Administration
-                     </h3>
-            </div>
-            <div class="card-body">';
-        $html .=  $this->buildLogodiv();
-        $html .= '
-            </div>
-        </div>';
+            $html = '
+            <div class="card mt-2 d-print-none">
+                <div class="card-header">
+                        <h3 class="card-header-title">
+                        Bambora Merchant Administration
+                         </h3>
+                </div>
+                <div class="card-body">';
+            $html .=  $this->buildLogodiv();
+            $html .= '
+                </div>
+            </div>';
+            return $html;
         }
-        return $html;
     }
 
     /**
