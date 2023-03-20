@@ -19,6 +19,7 @@ define('bambora_endpoint_merchant', 'https://merchant-v1.api-eu.bambora.com');
 define('bambora_endpoint_checkout', 'https://api.v1.checkout.bambora.com');
 define('bambora_checkout_assets', 'https://v1.checkout.bambora.com/Assets');
 define('bambora_endpoint_data', 'https://data-v1.api-eu.bambora.com');
+define('bambora_endpoint_login', 'https://login-v1.api-eu.bambora.com');
 
 class BamboraEndpointConfig
 {
@@ -44,5 +45,9 @@ class BamboraEndpointConfig
     public static function getDataEndpoint()
     {
         return constant('bambora_endpoint_data');
+    }
+    public static function getLoginEndpoint()
+    {
+        return constant('bambora_endpoint_login');
     }
 }

@@ -55,6 +55,12 @@ class BamboraApi
     private $dataEndpoint;
 
     /**
+     * Login endpoint
+     * @var string
+     */
+    private $loginEndpoint;
+
+    /**
      * __construct
      *
      * @param mixed $apiKey
@@ -67,6 +73,7 @@ class BamboraApi
         $this->merchantEndpoint = BamboraEndpointConfig::getMerchantEndpoint();
         $this->assetsEndpoint = BamboraEndpointConfig::getCheckoutAssets();
         $this->dataEndpoint = BamboraEndpointConfig::getDataEndpoint();
+        $this->loginEndpoint = BamboraEndpointConfig::getLoginEndpoint();
     }
 
     /**
@@ -85,20 +92,6 @@ class BamboraApi
         return json_decode($expresscheckoutresponse, true);
     }
 
-    /**
-     * getresponsecodedata
-     *
-     * @param string $source
-     * @param string $actionCode
-     * @return mixed
-     */
-    public function getresponsecodedata($source, $actionCode)
-    {
-        $serviceUrl = "{$this->dataEndpoint}/responsecodes/".$source."/".$actionCode;
-        $responseCodeData = $this ->_callRestService($serviceUrl, null, "GET");
-
-        return json_decode($responseCodeData, true);
-    }
 
     /**
      * capture
@@ -194,6 +187,20 @@ class BamboraApi
         $result = $this->_callRestService($serviceUrl, null, "GET");
         return json_decode($result, true);
     }
+    /**
+     * getresponsecodedata
+     *
+     * @param string $source
+     * @param string $actionCode
+     * @return mixed
+     */
+    public function getresponsecodedata($source, $actionCode)
+    {
+        $serviceUrl = "{$this->dataEndpoint}/responsecodes/".$source."/".$actionCode;
+        $responseCodeData = $this ->_callRestService($serviceUrl, null, "GET");
+
+        return json_decode($responseCodeData, true);
+    }
 
     /**
      * getPaymentTypes
@@ -210,6 +217,102 @@ class BamboraApi
         return $result;
     }
 
+
+    /**
+     * Check if the credentials for the API are valid
+     *
+     * @return boolean
+     */
+    public function testIfValidCredentials(): bool
+    {
+        $merchantnumber = (string)Tools::getValue('BAMBORA_MERCHANTNUMBER');
+        if (empty($merchantnumber)){ // Do not even try to contact rest service if merchant number is not even set.
+            return false;
+        }
+        $serviceUrl = "{$this->loginEndpoint}/merchant/functionpermissionsandfeatures";
+        $result = $this->_callRestService($serviceUrl, null, "GET");
+        $decoded = json_decode($result);
+        if (!isset($decoded->meta->result) || !$decoded->meta->result) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * @param $jsonData
+     * @return mixed
+     */
+
+    public function checkIfMerchantHasPaymentRequestCreatePermissions(): bool
+    {
+        $serviceUrl = "{$this->loginEndpoint}/merchant/functionpermissionsandfeatures";
+        $result = $this->_callRestService($serviceUrl, null, "GET");
+        $decoded = json_decode($result);
+        if ( isset( $decoded->meta->result ) && $decoded->meta->result ) {
+	        $functionpermissions = $decoded->functionpermissions;
+	        foreach ( $functionpermissions as $value ) {
+		        if ( $value->name == "function#expresscheckoutservice#v1#createpaymentrequest" ) {
+			        return true;
+		        }
+	        }
+        }
+
+	    return false;
+    }
+
+    /*
+     * Create a PaymentRequest
+     *
+     * @return mixed
+     */
+    public function createPaymentRequest($jsonData){
+        $serviceUrl = "{$this->checkoutEndpoint}/paymentrequests";
+        $result = $this->_callRestService($serviceUrl, $jsonData, "POST");
+        return json_decode($result, true);
+    }
+
+    /**
+     * Get a PaymentRequest
+     * @param string $paymentRequestId
+     * @return mixed
+     */
+    public function getPaymentRequest($paymentRequestId){
+        $serviceUrl = "{$this->checkoutEndpoint}/paymentrequests/{$paymentRequestId}";
+        $result = $this->_callRestService($serviceUrl, null, "GET");
+        return json_decode($result, true);
+    }
+    /**
+     * Send PaymentRequest email
+     * @param string $paymentRequestId, $jsonData
+     * @return mixed
+     */
+    public function sendPaymentRequestEmail($paymentRequestId, $jsonData){
+        $serviceUrl = "{$this->checkoutEndpoint}/paymentrequests/{$paymentRequestId}/email-notifications";
+        $result = $this->_callRestService($serviceUrl, $jsonData, "POST");
+        return json_decode($result, true);
+    }
+    /**
+     * Delete a PaymentRequest
+     * @param string $paymentRequestId
+     * @return mixed
+     */
+    public function deletePaymentRequest($paymentRequestId){
+        $serviceUrl = "{$this->checkoutEndpoint}/paymentrequests/{$paymentRequestId}";
+        $result = $this->_callRestService($serviceUrl, null, "DELETE");
+        return json_decode($result, true);
+    }
+
+
+
+
+    public function listPaymentRequests($exclusivestartkey, $pagesize, $filters){
+        $serviceUrl = "{$this->checkoutEndpoint}/paymentrequests/?exclusivestartkey={$exclusivestartkey}&pagesize={$pagesize}&filters={$filters}";
+        $result = $this->_callRestService($serviceUrl, null, "GET");
+        return json_decode($result, true);
+    }
+
+
     /**
      * getAvaliablePaymentcardidsForMerchant
      *
@@ -223,10 +326,10 @@ class BamboraApi
         $serviceRes = $this->getPaymentTypes($currency, $amount);
 
         $availablePaymentTypesResjson = json_decode($serviceRes, true);
-        if ($availablePaymentTypesResjson['meta']['result'] == true) {
+        if (isset($availablePaymentTypesResjson['meta']['result']) &&  $availablePaymentTypesResjson['meta']['result']== true) {
             foreach ($availablePaymentTypesResjson['paymentcollections'] as $payment) {
                 foreach ($payment['paymentgroups'] as $card) {
-                    //enshure unique id:
+                    //ensure unique id:
                     $cardname = $card['id'];
                     $res[$cardname] = $card['id'];
                 }
@@ -263,6 +366,7 @@ class BamboraApi
         curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($curl, CURLOPT_FAILONERROR, false);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+
 
         $result = curl_exec($curl);
         return $result;

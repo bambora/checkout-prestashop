@@ -24,9 +24,9 @@ class BamboraOrder
     public $billingaddress;
     public $currency;
     public $lines;
-    public $ordernumber;
+    public $id;
     public $shippingaddress;
-    public $total;
+    public $amount;
     public $vatamount;
 }
 class BamboraAddress
@@ -75,10 +75,43 @@ class BamboraCheckoutRequest
 {
     public $customer;
     public $instantcaptureamount;
-    public $language;
     public $order;
     public $url;
-    public $paymentwindowid;
+    public $paymentwindow;
     public $securityexemption;
     public $securitylevel;
+}
+class BamboraCheckoutRequestPaymentWindow
+{
+    public $id;
+    public $language;
+}
+
+class BamboraCheckoutPaymentRequest
+{
+    public $reference;
+    public $parameters;
+    public $description;
+	public $termsurl;
+}
+class BamboraCheckoutPaymentRequestParameters
+{
+    public $order;
+    public $instantcaptureamount;
+    public $paymentwindow;
+    public $customer;
+    public $url;
+}
+
+class BamboraCheckoutPaymentRequestEmailRecipient
+{
+    public $message;
+    public $to;
+    public $replyto;
+
+}
+class BamboraCheckoutPaymentRequestEmailRecipientAddress
+{
+    public $email;
+    public $name;
 }

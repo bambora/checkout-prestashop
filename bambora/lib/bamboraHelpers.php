@@ -386,5 +386,51 @@ class BamboraHelpers
         $eventInfo['title'] = $action . ":" . $subAction;
         $eventInfo['description'] = null;
         return $eventInfo;
+
     }
+
+    /**
+     * Get db paymentRequests
+     *
+     * int $limit
+     * int $page
+     * @return mixed
+     * @throws PrestaShopDatabaseException
+     */
+    public static function listPaymentRequests($limit = 20, $page = 1)
+    {
+
+        $offset = $limit * ($page-1);
+
+        $query = 'SELECT id_order, id_cart, payment_request_id, payment_request_url, date_add FROM ' . _DB_PREFIX_ . 'bambora_payment_requests LIMIT ' . pSQL($limit).' OFFSET ' . pSQL($offset);
+        $paymentRequests = Db::getInstance()->executeS($query);
+
+        if (!isset($paymentRequests) || count($paymentRequests) === 0 ) {
+            return false;
+        }
+
+        return $paymentRequests;
+    }
+
+    /**
+     * Get number of paymentRequests in db
+
+     * @return mixed
+     * @throws PrestaShopDatabaseException
+     */
+    public static function getNumberOfPaymentRequests()
+    {
+
+        $query = 'SELECT count(*)  FROM ' . _DB_PREFIX_ . 'bambora_payment_requests';
+        $row_count = Db::getInstance()->getValue($query);
+
+        if (!isset($row_count)) {
+            return 0;
+        }
+
+        return $row_count;
+    }
+
+
+
 }

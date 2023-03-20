@@ -194,7 +194,7 @@
     font-style: italic;
 }
 .bambora-confirm-btn {
-    width: 80px;
+    width: 100px;
     background-color: #45beaa;
     color: #FCFDFE;
 }
@@ -204,13 +204,18 @@
 .bambora-credit-btn {
     background-color: #ffeb78;
     color: #000000;
-    width: 80px;
+    width: 100px;
 }
 
 .bambora-delete-btn {
     background-color: #f08791;
     color: #FCFDFE;
-    width: 80px;
+    width: 100px;
+}
+.bambora-preview-payment-request{
+    width: 100px;
+    background-color: #45beaa;
+    color: #FCFDFE;
 }
 
 .bambora-confirm-frame {
@@ -441,4 +446,7 @@ a.bambora-cancel:hover {
 
 #bambora-format-error {
     display: none;
+}
+.bambora_paymentrequest .panel-heading{
+    font-weight: bolder;
 }
