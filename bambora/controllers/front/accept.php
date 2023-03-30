@@ -34,7 +34,7 @@ class BamboraAcceptModuleFrontController extends BaseAction
                 }
                 sleep(1);
             }
-            $message = $this->processAction($cart, $responseCode);
+            $message = $this->processAction(false, $cart, $responseCode);
             $this->redirectToAccept($cart);
         } else {
             $message = empty($message) ? $this->l("Unknown error") : $message;
@@ -55,6 +55,6 @@ class BamboraAcceptModuleFrontController extends BaseAction
      */
     private function redirectToAccept($cart)
     {
-        Tools::redirectLink(__PS_BASE_URI__. 'order-confirmation.php?key='. $cart->secure_key. '&id_cart='. (int)$cart->id. '&id_module='. (int)$this->module->id. '&id_order='. (int)Order::getOrderByCartId($cart->id));
+        Tools::redirectLink(__PS_BASE_URI__. 'order-confirmation.php?key='. $cart->secure_key. '&id_cart='. (int)$cart->id. '&id_module='. (int)$this->module->id. '&id_order='. (int)Order::getIdByCartId($cart->id));
     }
 }
