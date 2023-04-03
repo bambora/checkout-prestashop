@@ -67,7 +67,7 @@ class ListPaymentRequestsController extends ModuleAdminController
                         $prStatus = "";
                         $prReference = "";
                         $prAmount = "";
-                        if (isset($paymentRequestDetails)) {
+                        if (isset($paymentRequestDetails) && $paymentRequestDetails['meta']['result']) {
 
                             $prDescription = $paymentRequestDetails['description'];
                             $prStatus = $paymentRequestDetails['status'];
