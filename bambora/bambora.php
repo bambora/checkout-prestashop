@@ -1590,6 +1590,19 @@ class Bambora extends PaymentModule {
 				$html .= '<img style="max-height:51px;clear: both;" src="https://d3r1pwhfz7unl9.cloudfront.net/paymentlogos/bank-' . $bank_name . '.svg" alt="' . $bank_name . '" title="' . $bank_name . '" />';
 			}
 		}
+        if (isset($transactionInfo["information"]["wallets"][0]["name"])) {
+            $wallet_name = $transactionInfo["information"]["wallets"][0]["name"];
+            if ($wallet_name == "MobilePay") {
+                $wallet_img = "13.svg";
+            }
+            if ($wallet_name == "Vipps") {
+                $wallet_img = "14.svg";
+        }
+            if (isset($wallet_img)) {
+                $html .= '&nbsp;<img style="max-height:51px;clear: both;" src="https://d3r1pwhfz7unl9.cloudfront.net/paymentlogos/' . $wallet_img . '" alt="' . $wallet_name . '" title="' . $wallet_name . '" />';
+            }
+        }
+        $html .= '<tr><td>' . $this->l('Amount') . ':</td>';
 
 		$html .= '<tr><td>' . $this->l( 'Amount' ) . ':</td>';
 
