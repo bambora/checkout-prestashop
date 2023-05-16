@@ -203,6 +203,7 @@
     min-width: 100px;
     background-color: #45beaa;
     color: #FCFDFE;
+    white-space: nowrap;
 }
 
 .badge-success {
@@ -213,24 +214,28 @@
     background-color: #ffeb78;
     color: #000000;
     min-width: 100px;
+    white-space: nowrap;
 }
 
 .bambora-delete-btn {
     background-color: #f08791;
     color: #FCFDFE;
     min-width: 100px;
+    white-space: nowrap;
 }
 
 .bambora-preview-payment-request {
     min-width: 100px;
     background-color: #45beaa;
     color: #FCFDFE;
+    white-space: nowrap;
 }
 
 .bambora-confirm-frame {
     min-width: 90px;
     vertical-align: middle;
     padding: 4px;
+    white-space: nowrap;
 }
 
 .bambora-cancelLink {
