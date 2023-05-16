@@ -15,14 +15,15 @@ class ListPaymentRequestsController extends ModuleAdminController
         $hasPaymentRequestPermissions = $api->checkIfMerchantHasPaymentRequestCreatePermissions();
 
         if (!$hasPaymentRequestPermissions) {
-            $content .= $this->module->l('Your merchant account does not have Payment Requests enabled yet. Please contact Bambora Support if you want to enable it.');
+            $content .= $this->module->l(
+                'Your merchant account does not have Payment Requests enabled yet. Please contact Bambora Support if you want to enable it.'
+            );
         } else {
-
             $orders_url = Context::getContext()->link->getAdminLink('AdminOrders');
             $url_str = parse_url($orders_url, PHP_URL_PATH);
             $query_str = parse_url($orders_url, PHP_URL_QUERY);
 
-            $page = $_GET['page'] ?? 1;
+            $page = isset($_GET['page']) ? $_GET['page'] : 1;
 
             $limit = 20;
             $countPR = 0;
@@ -30,7 +31,6 @@ class ListPaymentRequestsController extends ModuleAdminController
 
             try {
                 $countPR = BamboraHelpers::getNumberOfPaymentRequests();
-
             } catch (PrestaShopDatabaseException $e) {
                 error_log($e->getMessage());
             }
@@ -39,7 +39,10 @@ class ListPaymentRequestsController extends ModuleAdminController
                 $total_pages = ceil($countPR / $limit);
                 $paymentRequests = null;
                 try {
-                    $paymentRequests = BamboraHelpers::listPaymentRequests($limit, $page);
+                    $paymentRequests = BamboraHelpers::listPaymentRequests(
+                        $limit,
+                        $page
+                    );
                 } catch (PrestaShopDatabaseException $e) {
                     error_log($e->getMessage());
                 }
@@ -48,34 +51,54 @@ class ListPaymentRequestsController extends ModuleAdminController
                     $content .= $this->module->l('No payment requests yet.');
                 } else {
                     $content .= "<table style='padding:10px;'><tr>" .
-                        "<td style='padding:10px;'><b>" . $this->module->l("Order ID") . "</b></td>" .
-                        "<td style='padding:10px;'><b>" . $this->module->l("Payment Request Id") . "</b></td>" .
-                        "<td style='padding:10px;'><b>" . $this->module->l("Description") . "</b></td>" .
-                        "<td style='padding:10px;'><b>" . $this->module->l("Reference") . "</b></td>" .
-                        "<td style='padding:10px;'><b>" . $this->module->l("Status") . "</b></td>" .
-                        "<td style='padding:10px;'><b>" . $this->module->l("Amount") . "</b></td>" .
+                        "<td style='padding:10px;'><b>" . $this->module->l(
+                            "Order ID"
+                        ) . "</b></td>" .
+                        "<td style='padding:10px;'><b>" . $this->module->l(
+                            "Payment Request Id"
+                        ) . "</b></td>" .
+                        "<td style='padding:10px;'><b>" . $this->module->l(
+                            "Description"
+                        ) . "</b></td>" .
+                        "<td style='padding:10px;'><b>" . $this->module->l(
+                            "Reference"
+                        ) . "</b></td>" .
+                        "<td style='padding:10px;'><b>" . $this->module->l(
+                            "Status"
+                        ) . "</b></td>" .
+                        "<td style='padding:10px;'><b>" . $this->module->l(
+                            "Amount"
+                        ) . "</b></td>" .
 
                         "</tr>";
                     foreach ($paymentRequests as $paymentRequest) {
-
                         $order_id = $paymentRequest['id_order'];
                         $order_url = $url_str . $order_id . "/view?" . $query_str;
                         $payment_request_id = $paymentRequest['payment_request_id'];
                         $payment_request_url = $paymentRequest['payment_request_url'];
-                        $paymentRequestDetails = $api->getPaymentRequest($payment_request_id);
+                        $paymentRequestDetails = $api->getPaymentRequest(
+                            $payment_request_id
+                        );
                         $prDescription = "";
                         $prStatus = "";
                         $prReference = "";
                         $prAmount = "";
                         if (isset($paymentRequestDetails) && $paymentRequestDetails['meta']['result']) {
-
                             $prDescription = $paymentRequestDetails['description'];
                             $prStatus = $paymentRequestDetails['status'];
                             $prReference = $paymentRequestDetails['reference'];
 
                             if (isset($paymentRequestDetails['parameters']['order']['amount']) && isset($paymentRequestDetails['parameters']['order']['currency'])) {
-                                $amount = BamboraCurrency::convertPriceFromMinorUnits($paymentRequestDetails['parameters']['order']['amount'], BamboraCurrency::getCurrencyMinorunits($paymentRequestDetails['parameters']['order']['currency']));
-                                $formattedAmount = $this->context->currentLocale->formatPrice($amount, $paymentRequestDetails['parameters']['order']['currency']);
+                                $amount = BamboraCurrency::convertPriceFromMinorUnits(
+                                    $paymentRequestDetails['parameters']['order']['amount'],
+                                    BamboraCurrency::getCurrencyMinorunits(
+                                        $paymentRequestDetails['parameters']['order']['currency']
+                                    )
+                                );
+                                $formattedAmount = $this->context->currentLocale->formatPrice(
+                                    $amount,
+                                    $paymentRequestDetails['parameters']['order']['currency']
+                                );
                                 $prAmount = $formattedAmount;
                             }
                         }
@@ -93,16 +116,16 @@ class ListPaymentRequestsController extends ModuleAdminController
                     $query = $_GET;
                     $url_str = $_SERVER['PHP_SELF'];
 
-                    $pagLink ="<ul style='list-style: none;'>";
+                    $pagLink = "<ul style='list-style: none;'>";
                     for ($i = 1; $i <= $total_pages; $i++) {
                         $query['page'] = $i;
                         $query_result = http_build_query($query);
-                        if ($i == $page){
+                        if ($i == $page) {
                             $style = "font-weight:800;";
-                        }else{
+                        } else {
                             $style = "font-weight:400;";
                         }
-                        $pagLink .= "<li style='display: inline'><a style='padding:10px;".$style."' href='" . $url_str . "?" . $query_result . "'>" . $i . "</a></li>";
+                        $pagLink .= "<li style='display: inline'><a style='padding:10px;" . $style . "' href='" . $url_str . "?" . $query_result . "'>" . $i . "</a></li>";
                     }
                     $pagLink .= "</ul>";
 
@@ -117,7 +140,5 @@ class ListPaymentRequestsController extends ModuleAdminController
         $this->context->smarty->assign(array(
             'content' => $content,
         ));
-
-
     }
 }

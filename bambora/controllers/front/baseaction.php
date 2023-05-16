@@ -21,7 +21,7 @@ abstract class BaseAction extends ModuleFrontController
      * @param mixed $cart
      * @return boolean
      */
-    protected function validateAction( &$message, &$cart  )
+    protected function validateAction(&$message, &$cart)
     {
         if (!Tools::getIsset("txnid")) {
             $message = "No GET(txnid) was supplied to the system!";
@@ -38,7 +38,7 @@ abstract class BaseAction extends ModuleFrontController
         $cart = new Cart($id_cart);
 
         if (!isset($cart)) {
-            $message =  "Please provide a valid orderid";
+            $message = "Please provide a valid orderid";
             return false;
         }
 
@@ -70,7 +70,7 @@ abstract class BaseAction extends ModuleFrontController
      * @param mixed $responseCode
      * @return mixed
      */
-    protected function processAction( $isPaymentRequest, $cart, &$responseCode)
+    protected function processAction($isPaymentRequest, $cart, &$responseCode)
     {
         try {
             if (!$cart->orderExists() || $isPaymentRequest) {
@@ -122,7 +122,8 @@ abstract class BaseAction extends ModuleFrontController
                 }
 
 
-                $mailVars = array('TransactionId' => $transactionId,
+                $mailVars = array(
+                    'TransactionId' => $transactionId,
                     'PaymentType' => $paymentType,
                     'CardNumber' => $truncatedCardNumber,
                     'AcquirerReference' => $acquirerReference
@@ -131,8 +132,14 @@ abstract class BaseAction extends ModuleFrontController
                 $minorUnits = $bamboraTransactionInfo["currency"]["minorunits"];
                 $amountInMinorUnits = $bamboraTransactionInfo["total"]["authorized"];
                 $feeAmountInMinorUnits = $bamboraTransactionInfo["total"]["feeamount"];
-                $transactionfee = $feeAmountInMinorUnits > 0 ? BamboraCurrency::convertPriceFromMinorUnits($feeAmountInMinorUnits, $minorUnits) : 0;
-                $totalAmount = BamboraCurrency::convertPriceFromMinorUnits($amountInMinorUnits, $minorUnits);
+                $transactionfee = $feeAmountInMinorUnits > 0 ? BamboraCurrency::convertPriceFromMinorUnits(
+                    $feeAmountInMinorUnits,
+                    $minorUnits
+                ) : 0;
+                $totalAmount = BamboraCurrency::convertPriceFromMinorUnits(
+                    $amountInMinorUnits,
+                    $minorUnits
+                );
                 $amountWithoutFee = $totalAmount - $transactionfee;
 
                 $paymentMethod = $this->module->displayName . ' (' . $paymentType . ')';
@@ -140,12 +147,20 @@ abstract class BaseAction extends ModuleFrontController
 
                 if (!$isPaymentRequest) {
                     try {
-                        $this->module->validateOrder((int)$id_cart,
+                        $this->module->validateOrder(
+                            (int)$id_cart,
                             Configuration::get('PS_OS_PAYMENT'),
                             $amountWithoutFee,
-                            $paymentMethod, null, $mailVars, $currencyId, false, $cart->secure_key);
+                            $paymentMethod,
+                            null,
+                            $mailVars,
+                            $currencyId,
+                            false,
+                            $cart->secure_key
+                        );
                     } catch (Exception $ex) {
-                        $message = 'Prestashop threw an exception on validateOrder: ' . $ex->getMessage();
+                        $message = 'Prestashop threw an exception on validateOrder: ' . $ex->getMessage(
+                            );
                         $responseCode = 500;
                         return $message;
                     }
@@ -184,13 +199,12 @@ abstract class BaseAction extends ModuleFrontController
                         }
                     }
                 }
-                if ($isPaymentRequest){
+                if ($isPaymentRequest) {
                     $message = "Payment Added to Payment Request Order";
-                }else{
+                } else {
                     $message = "Order Created";
                 }
                 $responseCode = 200;
-
             } else {
                 $message = "Order was already Created";
                 $responseCode = 200;

@@ -26,9 +26,9 @@ class BamboraHelpers
         $accessToken = Configuration::get('BAMBORA_ACCESSTOKEN');
         $secretToken = Configuration::get('BAMBORA_SECRETTOKEN');
 
-        $combined = $accessToken . '@' . $merchant .':'. $secretToken;
+        $combined = $accessToken . '@' . $merchant . ':' . $secretToken;
         $encodedKey = base64_encode($combined);
-        $apiKey = 'Basic '.$encodedKey;
+        $apiKey = 'Basic ' . $encodedKey;
 
         return $apiKey;
     }
@@ -41,8 +41,8 @@ class BamboraHelpers
      */
     public static function formatTruncatedCardnumber($cardnumber)
     {
-        $wordWrapped =  wordwrap($cardnumber, 4, ' ', true);
-        return  str_replace("X", "&bull;", $wordWrapped);
+        $wordWrapped = wordwrap($cardnumber, 4, ' ', true);
+        return str_replace("X", "&bull;", $wordWrapped);
     }
 
     /**
@@ -141,11 +141,15 @@ class BamboraHelpers
         }
         if ($action === "authorize") {
             if (isset($operation['paymenttype']['id'])) {
-                $threeDSecureBrandName = BamboraHelpers::getCardAuthenticationBrandName($operation['paymenttype']['id']);
+                $threeDSecureBrandName = BamboraHelpers::getCardAuthenticationBrandName(
+                    $operation['paymenttype']['id']
+                );
             }
             // Temporary renaming for Lindorff to Walley require until implemented in Acquire
-            $thirdPartyName = $operation['acquirername'];
-            $thirdPartyName = strtolower($thirdPartyName) !== ("lindorff" || "collectorbank")
+            $thirdPartyName = (string)$operation['acquirername'];
+            $thirdPartyName = strtolower(
+                $thirdPartyName
+            ) !== ("lindorff" || "collectorbank")
                 ? $thirdPartyName
                 : "Walley";
 
@@ -386,7 +390,6 @@ class BamboraHelpers
         $eventInfo['title'] = $action . ":" . $subAction;
         $eventInfo['description'] = null;
         return $eventInfo;
-
     }
 
     /**
@@ -399,13 +402,14 @@ class BamboraHelpers
      */
     public static function listPaymentRequests($limit = 20, $page = 1)
     {
+        $offset = $limit * ($page - 1);
 
-        $offset = $limit * ($page-1);
-
-        $query = 'SELECT id_order, id_cart, payment_request_id, payment_request_url, date_add FROM ' . _DB_PREFIX_ . 'bambora_payment_requests LIMIT ' . pSQL($limit).' OFFSET ' . pSQL($offset);
+        $query = 'SELECT id_order, id_cart, payment_request_id, payment_request_url, date_add FROM ' . _DB_PREFIX_ . 'bambora_payment_requests LIMIT ' . pSQL(
+                $limit
+            ) . ' OFFSET ' . pSQL($offset);
         $paymentRequests = Db::getInstance()->executeS($query);
 
-        if (!isset($paymentRequests) || count($paymentRequests) === 0 ) {
+        if (!isset($paymentRequests) || count($paymentRequests) === 0) {
             return false;
         }
 
@@ -414,13 +418,11 @@ class BamboraHelpers
 
     /**
      * Get number of paymentRequests in db
-
      * @return mixed
      * @throws PrestaShopDatabaseException
      */
     public static function getNumberOfPaymentRequests()
     {
-
         $query = 'SELECT count(*)  FROM ' . _DB_PREFIX_ . 'bambora_payment_requests';
         $row_count = Db::getInstance()->getValue($query);
 
@@ -430,7 +432,4 @@ class BamboraHelpers
 
         return $row_count;
     }
-
-
-
 }

@@ -87,7 +87,11 @@ class BamboraApi
         $serviceUrl = "{$this->checkoutEndpoint}/checkout";
 
         $jsonData = json_encode($bamboracheckoutrequest);
-        $expresscheckoutresponse = $this ->_callRestService($serviceUrl, $jsonData, "POST");
+        $expresscheckoutresponse = $this->_callRestService(
+            $serviceUrl,
+            $jsonData,
+            "POST"
+        );
 
         return json_decode($expresscheckoutresponse, true);
     }
@@ -104,13 +108,12 @@ class BamboraApi
      */
     public function capture($transactionid, $amount, $currency, $invoiceLines = null)
     {
-
         $serviceUrl = "{$this->transactionEndpoint}/transactions/{$transactionid}/capture";
 
         $data = array();
         $data["amount"] = $amount;
         $data["currency"] = $currency;
-        if (isset($invoiceLines)){
+        if (isset($invoiceLines)) {
             $data["invoicelines"] = $invoiceLines;
         }
         $jsonData = json_encode($data);
@@ -135,7 +138,7 @@ class BamboraApi
         $data = array();
         $data["amount"] = $amount;
         $data["currency"] = $currency;
-        if (isset($invoiceLines)){
+        if (isset($invoiceLines)) {
             $data["invoicelines"] = $invoiceLines;
         }
 
@@ -187,6 +190,7 @@ class BamboraApi
         $result = $this->_callRestService($serviceUrl, null, "GET");
         return json_decode($result, true);
     }
+
     /**
      * getresponsecodedata
      *
@@ -196,8 +200,8 @@ class BamboraApi
      */
     public function getresponsecodedata($source, $actionCode)
     {
-        $serviceUrl = "{$this->dataEndpoint}/responsecodes/".$source."/".$actionCode;
-        $responseCodeData = $this ->_callRestService($serviceUrl, null, "GET");
+        $serviceUrl = "{$this->dataEndpoint}/responsecodes/" . $source . "/" . $actionCode;
+        $responseCodeData = $this->_callRestService($serviceUrl, null, "GET");
 
         return json_decode($responseCodeData, true);
     }
@@ -223,10 +227,10 @@ class BamboraApi
      *
      * @return boolean
      */
-    public function testIfValidCredentials(): bool
+    public function testIfValidCredentials()
     {
         $merchantnumber = (string)Tools::getValue('BAMBORA_MERCHANTNUMBER');
-        if (empty($merchantnumber)){ // Do not even try to contact rest service if merchant number is not even set.
+        if (empty($merchantnumber)) { // Do not even try to contact rest service if merchant number is not even set.
             return false;
         }
         $serviceUrl = "{$this->loginEndpoint}/merchant/functionpermissionsandfeatures";
@@ -244,21 +248,21 @@ class BamboraApi
      * @return mixed
      */
 
-    public function checkIfMerchantHasPaymentRequestCreatePermissions(): bool
+    public function checkIfMerchantHasPaymentRequestCreatePermissions()
     {
         $serviceUrl = "{$this->loginEndpoint}/merchant/functionpermissionsandfeatures";
         $result = $this->_callRestService($serviceUrl, null, "GET");
         $decoded = json_decode($result);
-        if ( isset( $decoded->meta->result ) && $decoded->meta->result ) {
-	        $functionpermissions = $decoded->functionpermissions;
-	        foreach ( $functionpermissions as $value ) {
-		        if ( $value->name == "function#expresscheckoutservice#v1#createpaymentrequest" ) {
-			        return true;
-		        }
-	        }
+        if (isset($decoded->meta->result) && $decoded->meta->result) {
+            $functionpermissions = $decoded->functionpermissions;
+            foreach ($functionpermissions as $value) {
+                if ($value->name == "function#expresscheckoutservice#v1#createpaymentrequest") {
+                    return true;
+                }
+            }
         }
 
-	    return false;
+        return false;
     }
 
     /*
@@ -266,7 +270,8 @@ class BamboraApi
      *
      * @return mixed
      */
-    public function createPaymentRequest($jsonData){
+    public function createPaymentRequest($jsonData)
+    {
         $serviceUrl = "{$this->checkoutEndpoint}/paymentrequests";
         $result = $this->_callRestService($serviceUrl, $jsonData, "POST");
         return json_decode($result, true);
@@ -277,36 +282,40 @@ class BamboraApi
      * @param string $paymentRequestId
      * @return mixed
      */
-    public function getPaymentRequest($paymentRequestId){
+    public function getPaymentRequest($paymentRequestId)
+    {
         $serviceUrl = "{$this->checkoutEndpoint}/paymentrequests/{$paymentRequestId}";
         $result = $this->_callRestService($serviceUrl, null, "GET");
         return json_decode($result, true);
     }
+
     /**
      * Send PaymentRequest email
-     * @param string $paymentRequestId, $jsonData
+     * @param string $paymentRequestId , $jsonData
      * @return mixed
      */
-    public function sendPaymentRequestEmail($paymentRequestId, $jsonData){
+    public function sendPaymentRequestEmail($paymentRequestId, $jsonData)
+    {
         $serviceUrl = "{$this->checkoutEndpoint}/paymentrequests/{$paymentRequestId}/email-notifications";
         $result = $this->_callRestService($serviceUrl, $jsonData, "POST");
         return json_decode($result, true);
     }
+
     /**
      * Delete a PaymentRequest
      * @param string $paymentRequestId
      * @return mixed
      */
-    public function deletePaymentRequest($paymentRequestId){
+    public function deletePaymentRequest($paymentRequestId)
+    {
         $serviceUrl = "{$this->checkoutEndpoint}/paymentrequests/{$paymentRequestId}";
         $result = $this->_callRestService($serviceUrl, null, "DELETE");
         return json_decode($result, true);
     }
 
 
-
-
-    public function listPaymentRequests($exclusivestartkey, $pagesize, $filters){
+    public function listPaymentRequests($exclusivestartkey, $pagesize, $filters)
+    {
         $serviceUrl = "{$this->checkoutEndpoint}/paymentrequests/?exclusivestartkey={$exclusivestartkey}&pagesize={$pagesize}&filters={$filters}";
         $result = $this->_callRestService($serviceUrl, null, "GET");
         return json_decode($result, true);
@@ -326,7 +335,7 @@ class BamboraApi
         $serviceRes = $this->getPaymentTypes($currency, $amount);
 
         $availablePaymentTypesResjson = json_decode($serviceRes, true);
-        if (isset($availablePaymentTypesResjson['meta']['result']) &&  $availablePaymentTypesResjson['meta']['result']== true) {
+        if (isset($availablePaymentTypesResjson['meta']['result']) && $availablePaymentTypesResjson['meta']['result'] == true) {
             foreach ($availablePaymentTypesResjson['paymentcollections'] as $payment) {
                 foreach ($payment['paymentgroups'] as $card) {
                     //ensure unique id:
@@ -352,9 +361,9 @@ class BamboraApi
     {
         $headers = array(
             'Content-Type: application/json',
-            'Content-Length: '.strlen(@$jsonData),
+            'Content-Length: ' . strlen(@$jsonData),
             'Accept: application/json',
-            'Authorization: '.$this->apiKey,
+            'Authorization: ' . $this->apiKey,
             'X-EPay-System: ' . BamboraHelpers::getModuleHeaderInfo()
         );
 

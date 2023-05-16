@@ -28,7 +28,7 @@ $(document).ready(function () {
             "hideOnContentClick": false,
             "hideOnOverlayClick": false,
             "helpers": {
-                "overlay": { "closeClick": true }
+                "overlay": {"closeClick": true}
             }
         });
 
@@ -64,7 +64,7 @@ $(document).ready(function () {
 
         postButton.click(function () {
             var reg = new RegExp(/^(?:[\d]+([,.]?[\d]{0,3}))$/);
-            if (inputField.length > 0 && inputField.name()!== "bambora-delete" && !reg.test(inputField.val())) {
+            if (inputField.length > 0 && inputField.name() !== "bambora-delete" && !reg.test(inputField.val())) {
                 $("#bambora-format-error").toggle();
                 return false;
             }
@@ -92,7 +92,7 @@ $(document).ready(function () {
                 var reg = new RegExp(/^(?:\d+(?:,\d{0,3})*(?:\.\d{0,2})?|\d+(?:\.\d{0,3})*(?:,\d{0,2})?)$/);
                 if (reg.test(digit)) {
                     console.log(e);
-                    return;
+
                 } else {
                     return false;
                 }

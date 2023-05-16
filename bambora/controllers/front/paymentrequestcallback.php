@@ -25,7 +25,7 @@ class BamboraPaymentRequestCallbackModuleFrontController extends BaseAction
         $message = "";
         $responseCode = 400;
         $cart = null;
-        if ($this->validateAction( $message, $cart)) {
+        if ($this->validateAction($message, $cart)) {
             $message = $this->processAction(true, $cart, $responseCode);
         } else {
             $message = empty($message) ? $this->l("Unknown error") : $message;

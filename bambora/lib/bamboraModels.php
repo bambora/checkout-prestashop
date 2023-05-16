@@ -19,6 +19,7 @@ class BamboraCustomer
     public $phonenumber;
     public $phonenumbercountrycode;
 }
+
 class BamboraOrder
 {
     public $billingaddress;
@@ -29,6 +30,7 @@ class BamboraOrder
     public $amount;
     public $vatamount;
 }
+
 class BamboraAddress
 {
     public $att;
@@ -39,6 +41,7 @@ class BamboraAddress
     public $street;
     public $zip;
 }
+
 class BamboraOrderLine
 {
     public $description;
@@ -55,22 +58,26 @@ class BamboraOrderLine
     public $unitpricevatamount;
     public $vat;
 }
+
 class BamboraUrl
 {
     public $accept;
     public $callbacks;
     public $decline;
 }
+
 class BamboraCallback
 {
     public $url;
 }
+
 class BamboraUiMessage
 {
     public $type;
     public $title;
     public $message;
 }
+
 class BamboraCheckoutRequest
 {
     public $customer;
@@ -81,6 +88,7 @@ class BamboraCheckoutRequest
     public $securityexemption;
     public $securitylevel;
 }
+
 class BamboraCheckoutRequestPaymentWindow
 {
     public $id;
@@ -92,8 +100,9 @@ class BamboraCheckoutPaymentRequest
     public $reference;
     public $parameters;
     public $description;
-	public $termsurl;
+    public $termsurl;
 }
+
 class BamboraCheckoutPaymentRequestParameters
 {
     public $order;
@@ -110,6 +119,7 @@ class BamboraCheckoutPaymentRequestEmailRecipient
     public $replyto;
 
 }
+
 class BamboraCheckoutPaymentRequestEmailRecipientAddress
 {
     public $email;

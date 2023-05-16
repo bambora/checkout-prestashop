@@ -37,23 +37,33 @@ class BamboraPaymentModuleFrontController extends ModuleFrontController
         }
 
         if (!$authorized) {
-            die($this->module->l('This payment method is not available.', 'bambora'));
+            die(
+            $this->module->l(
+                'This payment method is not available.',
+                'bambora'
+            )
+            );
         }
 
         //create checkout request
         $bamboraCheckoutRequest = $this->module->createCheckoutRequest($cart);
-        $checkoutResponse = $this->module->getBamboraCheckoutSession($bamboraCheckoutRequest);
+        $checkoutResponse = $this->module->getBamboraCheckoutSession(
+            $bamboraCheckoutRequest
+        );
         if (!isset($checkoutResponse) || $checkoutResponse['meta']['result'] == false) {
             //add error message
             Tools::redirect('index.php?controller=order&step=1');
         }
-        
-        $paymentData = array('bamboraWindowState' => Configuration::get('BAMBORA_WINDOWSTATE'),
-                             'bamboraCheckoutToken' => $checkoutResponse['token']
-                            );
+
+        $paymentData = array(
+            'bamboraWindowState' => Configuration::get('BAMBORA_WINDOWSTATE'),
+            'bamboraCheckoutToken' => $checkoutResponse['token']
+        );
 
         $this->context->smarty->assign($paymentData);
 
-        $this->setTemplate('module:bambora/views/templates/front/bamboracheckout17.tpl');
+        $this->setTemplate(
+            'module:bambora/views/templates/front/bamboracheckout17.tpl'
+        );
     }
 }

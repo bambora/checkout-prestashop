@@ -41,7 +41,9 @@ class BamboraAcceptModuleFrontController extends BaseAction
             $this->createLogMessage($message, 3, $cart);
             Context::getContext()->smarty->assign('paymenterror', $message);
             if ($this->module->getPsVersion() === Bambora::V17) {
-                $this->setTemplate('module:bambora/views/templates/front/paymenterror17.tpl');
+                $this->setTemplate(
+                    'module:bambora/views/templates/front/paymenterror17.tpl'
+                );
             } else {
                 $this->setTemplate('paymenterror.tpl');
             }
@@ -55,6 +57,10 @@ class BamboraAcceptModuleFrontController extends BaseAction
      */
     private function redirectToAccept($cart)
     {
-        Tools::redirectLink(__PS_BASE_URI__. 'order-confirmation.php?key='. $cart->secure_key. '&id_cart='. (int)$cart->id. '&id_module='. (int)$this->module->id. '&id_order='. (int)Order::getIdByCartId($cart->id));
+        Tools::redirectLink(
+            __PS_BASE_URI__ . 'order-confirmation.php?key=' . $cart->secure_key . '&id_cart=' . (int)$cart->id . '&id_module=' . (int)$this->module->id . '&id_order=' . (int)Order::getIdByCartId(
+                $cart->id
+            )
+        );
     }
 }

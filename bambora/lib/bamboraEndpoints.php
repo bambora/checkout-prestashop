@@ -42,10 +42,12 @@ class BamboraEndpointConfig
     {
         return constant('bambora_checkout_assets');
     }
+
     public static function getDataEndpoint()
     {
         return constant('bambora_endpoint_data');
     }
+
     public static function getLoginEndpoint()
     {
         return constant('bambora_endpoint_login');
