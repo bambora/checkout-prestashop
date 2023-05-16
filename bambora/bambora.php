@@ -1630,16 +1630,28 @@ class Bambora extends PaymentModule {
 
 		$html .= '<tr><td>' . $this->l( 'Status' ) . ':</td><td>' . $this->checkoutStatus( $transactionInfo["status"] ) . '</td></tr>';
 
-		$eci = $this->getLowestECI( $transactionInfo["information"]["ecis"] );
-		if ( $eci != "" ) {
-			$html .= '<tr><td>' . $this->l( 'ECI' ) . ':</td><td>' . $eci . '</td></tr>';
-		}
+        if (isset($transactionInfo["information"]["ecis"])) {
+            $eci = $this->getLowestECI($transactionInfo["information"]["ecis"]);
+            if ($eci != "") {
+                $html .= '<tr><td>' . $this->l(
+                        'ECI'
+                    ) . ':</td><td>' . $eci . '</td></tr>';
+            }
+        }
 
+        if (isset($transactionInfo["information"]["exemptions"])) {
+            $distinctExemptions = $this->getDistinctExemptions(
+                $transactionInfo["information"]["exemptions"]
+            );
+            if ($distinctExemptions != "" && $distinctExemptions != null) {
+                $html .= '<tr><td>' . $this->l(
+                        'Exemptions'
+                    ) . ':</td><td>' . $this->getDistinctExemptions(
+                        $transactionInfo["information"]["exemptions"]
+                    ) . '</td></tr>';
+            }
+        }
 
-		$distinctExemptions = $this->getDistinctExemptions( $transactionInfo["information"]["exemptions"] );
-		if ( $distinctExemptions != "" && $distinctExemptions != null ) {
-			$html .= '<tr><td>' . $this->l( 'Exemptions' ) . ':</td><td>' . $this->getDistinctExemptions( $transactionInfo["information"]["exemptions"] ) . '</td></tr>';
-		}
 		$html .= '</table>';
 
 		return $html;
@@ -1677,9 +1689,11 @@ class Bambora extends PaymentModule {
 
 	private function getDistinctExemptions( $exemptions ) {
 		$exemptionValues = null;
-		foreach ( $exemptions as $exemption ) {
-			$exemptionValues[] = $exemption['value'];
-		}
+        if (isset($exemptions)) {
+            foreach ($exemptions as $exemption) {
+                $exemptionValues[] = $exemption['value'];
+            }
+        }
 
 		return implode( ",", array_unique( $exemptionValues ) );
 	}
@@ -2079,7 +2093,7 @@ class Bambora extends PaymentModule {
 				}
 				$html = $this->displayConfirmation( $this->l( $message ) );
 			} else {
-				throw new Exception( $createPaymentRequest->meta->message );
+                throw new Exception($createPaymentRequest['meta']['message']);
 			}
 		} catch ( Exception $e ) {
 			$html = $this->displayError( $e->getMessage() );
@@ -2165,7 +2179,7 @@ class Bambora extends PaymentModule {
 				}
 				$html = $this->displayConfirmation( $this->l( $message ) );
 			} else {
-				throw new Exception( $deletePaymentRequest->meta->message );
+                throw new Exception($deletePaymentRequest['meta']['message']);
 			}
 		} catch ( Exception $e ) {
 			$html = $this->displayError( $e->getMessage() );
@@ -2232,7 +2246,7 @@ class Bambora extends PaymentModule {
 				}
 				$html = $this->displayConfirmation( $this->l( $message ) );
 			} else {
-				throw new Exception( $sendPaymentRequestEmail->meta->message );
+                throw new Exception($sendPaymentRequestEmail['meta']['message']);
 			}
 		} catch ( Exception $e ) {
 			$html = $this->displayError( $e->getMessage() );
