@@ -756,7 +756,7 @@ class Bambora extends PaymentModule
                             <p>Only active if <b>"Enable Low Value Exemption"</b> is set to yes.</p>
                         </div>
                          <div>
-                            <h4>URL to Terms & Conditions/h4>
+                            <h4>URL to Terms & Conditions</h4>
                             <p>In case you are using Payment Requests this is where you can set the URL for your terms & conditions</p>
                         </div>
                         
