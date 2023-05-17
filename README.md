@@ -1,7 +1,8 @@
-Bambora Checkout for Prestashop 
+Bambora Checkout for Prestashop
 ========================
 
-Supported versions of Prestashop: 1.5.x , 1.6.x and 1.7.x
+Supported versions of Prestashop: 1.5.x , 1.6.x, 1.7.x and 8.0.x
+
+Documentation: https://developer.bambora.com/europe/shopping-carts/shopping-carts/prestashop
 
 
-Documentation: http://dev.bambora.com/carts.html#prestashop
