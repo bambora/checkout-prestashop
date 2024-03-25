@@ -229,7 +229,7 @@ class BamboraApi
      */
     public function testIfValidCredentials()
     {
-        $merchantnumber = (string)Tools::getValue('BAMBORA_MERCHANTNUMBER');
+        $merchantnumber = Configuration::get('BAMBORA_MERCHANTNUMBER');
         if (empty($merchantnumber)) { // Do not even try to contact rest service if merchant number is not even set.
             return false;
         }
