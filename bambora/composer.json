@@ -1,6 +1,6 @@
 {
   "name": "bambora/module-payment-prestashop",
-  "description": "PrestaShop payment module for Bambora Online",
+  "description": "PrestaShop payment module for Worldline Checkout",
   "homepage": "https://www.bambora.com/sv/se/online/",
   "license": "OSL-3.0",
   "version": "2.1.1",
