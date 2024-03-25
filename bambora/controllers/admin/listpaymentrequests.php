@@ -16,7 +16,7 @@ class ListPaymentRequestsController extends ModuleAdminController
 
         if (!$hasPaymentRequestPermissions) {
             $content .= $this->module->l(
-                'Your merchant account does not have Payment Requests enabled yet. Please contact Bambora Support if you want to enable it.'
+                'Your merchant account does not have Payment Requests enabled yet. Please contact Worldline Nordics Support if you want to enable it.'
             );
         } else {
             $orders_url = Context::getContext()->link->getAdminLink('AdminOrders');

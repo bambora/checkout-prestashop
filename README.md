@@ -1,5 +1,7 @@
-Bambora Checkout for Prestashop
+Worldline Checkout for Prestashop
 ========================
+
+Previously known as Bambora Checkout
 
 Supported versions of Prestashop: 1.5.x , 1.6.x, 1.7.x and 8.0.x
 

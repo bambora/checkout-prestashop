@@ -57,9 +57,9 @@ class Bambora extends PaymentModule
 
         parent::__construct();
 
-        $this->displayName = 'Bambora Online Checkout';
+        $this->displayName = 'Worldline Checkout';
         $this->description = $this->l(
-            'Accept online payments quick and secure by Bambora Online Checkout'
+            'Accept online payments quick and secure by Worldline Checkout'
         );
 
         if ($this->isPsVersionHigherThan177()) {
@@ -133,7 +133,7 @@ class Bambora extends PaymentModule
         $tab->class_name = 'ListPaymentRequests';
         $tab->name = array();
         foreach (Language::getLanguages(true) as $lang) {
-            $tab->name[$lang['id_lang']] = 'Bambora Payment Requests';
+            $tab->name[$lang['id_lang']] = 'Worldline Payment Requests';
         }
         $tab->id_parent = (int)Tab::getIdFromClassName('SELL');
         $tab->module = $this->name;
@@ -666,26 +666,26 @@ class Bambora extends PaymentModule
                         <br />
                         <div>
                             <h4>Merchant number</h4>
-                            <p>The number identifying your Bambora merchant account.</p>
+                            <p>The number identifying your Worldline merchant account.</p>
                             <p><b>Note: </b>This field is mandatory to enable payments</p>
                         </div>
                         <br />
                         <div>
                             <h4>Access token</h4>
-                            <p>The Access token for the API user received from the Bambora administration.</p>
+                            <p>The Access token for the API user received from the Worldline administration.</p>
                             <p><b>Note:</b> This field is mandatory in order to enable payments</p>
                         </div>
                         <br />
                         <div>
                             <h4>Secret token</h4>
-                            <p>The Secret token for the API user received from the Bambora administration.</p>
+                            <p>The Secret token for the API user received from the Worldline administration.</p>
                             <p><b>Note: </b>This field is mandatory in order to enable payments.</p>
                         </div>
                         <br />
                         <div>
                             <h4>MD5 Key</h4>
-                            <p>The MD5 key is used to stamp data sent between Magento and Bambora to prevent it from being tampered with.</p>
-                            <p><b>Note: </b>The MD5 key is optional but if used here, must be the same as in the Bambora administration.</p>
+                            <p>The MD5 key is used to stamp data sent between Magento and Worldline to prevent it from being tampered with.</p>
+                            <p><b>Note: </b>The MD5 key is optional but if used here, must be the same as in the Worldline administration.</p>
                         </div>
                         <br />
                         <div>
@@ -696,7 +696,7 @@ class Bambora extends PaymentModule
                         <div>
                             <h4>Payment method tittle</h4>
                             <p>The title of the payment method visible to the customers</p>
-                            <p><b>Note: </b> If left empty the default title will be <b>Bambora Online Checkout</b>
+                            <p><b>Note: </b> If left empty the default title will be <b>Worldline Checkout</b>
                         </div>
                         <br />
                         <div>
@@ -737,7 +737,7 @@ class Bambora extends PaymentModule
                         <br />
                         <div>
                             <h4>Capture on status changed failure e-mail</h4>
-                            <p>If the Capture fails on status changed an e-mail will be send to this address</p>
+                            <p>If the Capture fails on status changed an e-mail will be sent to this address</p>
                         </div>
                         <br />
                         <div>
@@ -858,7 +858,7 @@ class Bambora extends PaymentModule
 
         $callToActionText = Tools::strlen(
             Configuration::get("BAMBORA_TITLE")
-        ) > 0 ? Configuration::get("BAMBORA_TITLE") : "Bambora Online Checkout";
+        ) > 0 ? Configuration::get("BAMBORA_TITLE") : "Worldline Checkout";
 
         $paymentData = array(
             'bamboraPaymentCardIds' => $paymentcardIds,
@@ -1385,7 +1385,7 @@ class Bambora extends PaymentModule
 
         $callToActionText = Tools::strlen(
             Configuration::get("BAMBORA_TITLE")
-        ) > 0 ? Configuration::get("BAMBORA_TITLE") : "Bambora Online Checkout";
+        ) > 0 ? Configuration::get("BAMBORA_TITLE") : "Worldline Checkout";
 
         $bamboraPaymentOption = new PrestaShop\PrestaShop\Core\Payment\PaymentOption(
         );
@@ -1790,7 +1790,7 @@ class Bambora extends PaymentModule
         $html = $this->buildBamboraContainerStartTag();
 
         if (empty($transactionId)) {
-            $html .= '<div class="card-header"><h3 class="card-header-title">Bambora Online Checkout</h3></div><div class=card-body"><div class="info-block"> No payment transaction was found</div></div>';
+            $html .= '<div class="card-header"><h3 class="card-header-title">Worldline Checkout</h3></div><div class=card-body"><div class="info-block"> No payment transaction was found</div></div>';
             $html .= '<br>';
             $html .= $this->buildBamboraContainerStopTag();
 
@@ -1823,7 +1823,7 @@ class Bambora extends PaymentModule
             $html .= '<style type="text/css">
                             .table td{white-space:nowrap;overflow-x:auto;}
                         </style>';
-            $html .= '<br /><fieldset><legend><img src="../img/admin/money.gif">Bambora Online Checkout</legend>';
+            $html .= '<br /><fieldset><legend><img src="../img/admin/money.gif">Worldline Checkout</legend>';
         } elseif ($this->getPsVersion() === $this::V16) {
             $html .= '<div class="row" >';
             $html .= '<div class="col-lg-12">';
@@ -1873,17 +1873,17 @@ class Bambora extends PaymentModule
         if ($this->isPsVersionHigherThan177()) {
             $html = '<div class="card-header"> <h3 class="card-header-title">';
             if (!empty($cardBrand)) {
-                $html .= "Bambora Checkout ({$cardBrand})";
+                $html .= "Worldline Checkout ({$cardBrand})";
             } else {
-                $html .= "Bambora Checkout";
+                $html .= "Worldline Checkout";
             }
             $html .= '</h3></div>';
         } else {
             $html = '<div class="panel-heading">';
             if (!empty($cardBrand)) {
-                $html .= "Bambora Checkout ({$cardBrand})";
+                $html .= "Worldline Checkout ({$cardBrand})";
             } else {
-                $html .= "Bambora Checkout";
+                $html .= "Worldline Checkout";
             }
             $html .= '</div>';
         }
@@ -3056,7 +3056,7 @@ class Bambora extends PaymentModule
         );
         $html = '<div class="card bambora_paymentrequest"><div class="card-header"> <h3 class="card-header-title">';
 
-        $html .= "Bambora Online Payment Request";
+        $html .= "Worldline Checkout Payment Request";
 
         $html .= '</h3></div><div class="card-body"><div class="row"><div class="col-6">';
 
@@ -3293,7 +3293,7 @@ class Bambora extends PaymentModule
         $msg = new Message();
         $message = strip_tags($message, '<br>');
         if (Validate::isCleanHtml($message)) {
-            $msg->name = "Bambora Online Checkout";
+            $msg->name = "Worldline Checkout";
             $msg->message = $message;
             $msg->id_order = (int)$orderId;
             $msg->private = 1;
@@ -3332,10 +3332,13 @@ class Bambora extends PaymentModule
         if (isset($payments[0]->card_brand) && $payments[0]->card_brand != "" && $payments[0]->card_brand != "Direct Banking") {
             $paymentType = $payments[0]->card_brand;
         } else {
-            if (strpos(
+            if ((strpos(
                     $payments[0]->payment_method,
                     "Bambora Online Checkout"
-                ) === 0) {
+                    ) === 0) || (strpos(
+                        $payments[0]->payment_method,
+                        "Worldline Checkout"
+                    ) === 0)) {
                 $apiKey = BamboraHelpers::generateApiKey();
                 $api = new BamboraApi($apiKey);
                 $bamboraTransaction = $api->gettransaction($transactionId);
