@@ -26,7 +26,7 @@ if (!defined('_PS_VERSION_')) {
 
 class Bambora extends PaymentModule
 {
-    const MODULE_VERSION = '2.1.0';
+    const MODULE_VERSION = '2.1.1';
     const V15 = '15';
     const V16 = '16';
     const V17 = '17';
@@ -36,7 +36,7 @@ class Bambora extends PaymentModule
     {
         $this->name = 'bambora';
         $this->tab = 'payments_gateways';
-        $this->version = '2.1.0';
+        $this->version = '2.1.1';
         $this->author = 'Bambora Online A/S';
 
         $this->ps_versions_compliancy = array(
