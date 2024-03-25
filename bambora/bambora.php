@@ -26,7 +26,7 @@ if (!defined('_PS_VERSION_')) {
 
 class Bambora extends PaymentModule
 {
-    const MODULE_VERSION = '2.2.0';
+    const MODULE_VERSION = '2.1.1';
     const V15 = '15';
     const V16 = '16';
     const V17 = '17';
@@ -36,7 +36,7 @@ class Bambora extends PaymentModule
     {
         $this->name = 'bambora';
         $this->tab = 'payments_gateways';
-        $this->version = '2.2.0';
+        $this->version = '2.1.1';
         $this->author = 'Bambora Online A/S';
 
         $this->ps_versions_compliancy = array(
@@ -3017,7 +3017,7 @@ class Bambora extends PaymentModule
 
 
         $helper = new HelperForm();
-        $helper->base_folder = _PS_ADMIN_DIR_ . '/themes/default/template/helpers/form/';
+
         $helper->module = $this;
         $helper->name_controller = $this->name;
         $helper->token = Tools::getAdminTokenLite('AdminOrders');
@@ -3333,8 +3333,8 @@ class Bambora extends PaymentModule
             $paymentType = $payments[0]->card_brand;
         } else {
             if ((strpos(
-                        $payments[0]->payment_method,
-                        "Bambora Online Checkout"
+                    $payments[0]->payment_method,
+                    "Bambora Online Checkout"
                     ) === 0) || (strpos(
                         $payments[0]->payment_method,
                         "Worldline Checkout"
