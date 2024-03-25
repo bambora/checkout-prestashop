@@ -22,7 +22,7 @@
                      alt="{l s='Pay using Bambora Checkout' mod='bambora'}"
                      style="float:left; margin-left:-10px; margin-top:-16px"/>
                 {/if}
-                <span>{l s='An issue occured' mod='bambora'}: </span>
+                <span>{l s='An issue occurred' mod='bambora'}: </span>
                 <span>{$bambora_errormessage|escape:'htmlall':'UTF-8'}</span>
             </a>
         </p>

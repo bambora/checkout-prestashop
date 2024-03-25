@@ -15,11 +15,7 @@
 <section>
     <div class="bambora_section_container">
         {if $onlyShowLogoes != true}
-        <p class="bambora_section_text">{l s='You have chosen to pay for the order
-            online. Once you have completed your order, you will be transferred to
-            the Bambora Online Checkout. Here you need to process your payment. Once
-            payment is completed, you will automatically be returned to our shop.'
-            mod='bambora'}</p>
+        <p class="bambora_section_text">{l s='You have chosen to pay for the order online. Once you have completed your order, you will be transferred to the Bambora Online Checkout. Here you need to process your payment. Once payment is completed, you will automatically be returned to our shop.' mod='bambora'}</p>
         {/if}
         <div class="bambora_paymentlogos">
             {if $paymentCardIds|@count gt 0}
