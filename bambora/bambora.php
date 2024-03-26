@@ -3017,7 +3017,7 @@ class Bambora extends PaymentModule
 
 
         $helper = new HelperForm();
-
+        $helper->base_folder = _PS_ADMIN_DIR_ . '/themes/default/template/helpers/form/';
         $helper->module = $this;
         $helper->name_controller = $this->name;
         $helper->token = Tools::getAdminTokenLite('AdminOrders');
