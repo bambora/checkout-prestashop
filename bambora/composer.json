@@ -1,13 +1,13 @@
 {
   "name": "bambora/module-payment-prestashop",
   "description": "PrestaShop payment module for Worldline Checkout",
-  "homepage": "https://www.bambora.com/sv/se/online/",
+  "homepage": "https://worldline.com/sv-se/home/main-navigation/solutions/merchants/solutions-and-services/online",
   "license": "OSL-3.0",
   "version": "2.2.0",
   "authors": [
     {
-      "name": "Bambora",
-      "email": "support@bambora.com"
+      "name": "Worldline",
+      "email": "support-nordics@worldline.com"
     }
   ],
   "require": {
