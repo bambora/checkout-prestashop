@@ -1304,7 +1304,7 @@ class Bambora extends PaymentModule
 
 	}
 
-    /**
+		/**
      * Create Bambora Url
      *
      * @return BamboraUrl
@@ -2074,7 +2074,7 @@ class Bambora extends PaymentModule
 	        if ( $wallet_name == "ApplePay" ) {
 		        $wallet_img = "21.svg";
 		        $wallet_name = "Apple Pay";
-            }
+	        }
             if (isset($wallet_img)) {
                 $html .= '&nbsp;<img style="max-height:51px;clear: both;" src="https://d3r1pwhfz7unl9.cloudfront.net/paymentlogos/' . $wallet_img . '" alt="' . $wallet_name . '" title="' . $wallet_name . '" />';
             }
@@ -3221,7 +3221,7 @@ class Bambora extends PaymentModule
         <div class="card mt-2 d-print-none">
             <div class="card-header">
                     <h3 class="card-header-title">
-                    Bambora Merchant Administration
+                    Worldline Merchant Administration
                      </h3>
             </div>
             <div class="card-body">';
