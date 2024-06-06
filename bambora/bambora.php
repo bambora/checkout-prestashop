@@ -1268,9 +1268,41 @@ class Bambora extends PaymentModule
             );
             $bamboraOrderlines[] = $discountOrderline;
         }
+	    $roundingOrderline = $this->createBamboraOrderlinesRoundingFee( $cartSummary, $minorUnits, $bamboraOrderlines, $lineNumber );
+	    if ( $roundingOrderline ) {
+		    $bamboraOrderlines[] = $roundingOrderline;
+	    }
 
         return $bamboraOrderlines;
     }
+
+	protected function createBamboraOrderlinesRoundingFee( $cartSummary, $minorUnits, $bamboraOrderlines, $lineNumber ) {
+
+
+		$cartTotal = BamboraCurrency::convertPriceToMinorUnits($cartSummary['total_price'], $minorUnits, Configuration::get('BAMBORA_ROUNDING_MODE'));
+		$bamboraTotal = 0;
+		foreach ( $bamboraOrderlines as $orderLine ) {
+			$bamboraTotal += $orderLine->quantity * $orderLine->unitpriceinclvat;
+		}
+		if ( $cartTotal != $bamboraTotal ) {
+			$roundingOrderline                      = new BamboraOrderline();
+			$roundingOrderline->id                  = $this->l('adjustment');
+			$roundingOrderline->totalprice          = $cartTotal - $bamboraTotal;
+			$roundingOrderline->totalpriceinclvat   = $cartTotal - $bamboraTotal;
+			$roundingOrderline->totalpricevatamount = 0;
+			$roundingOrderline->text                = $this->l('Rounding adjustment');
+			$roundingOrderline->unitprice           = $cartTotal - $bamboraTotal;
+			$roundingOrderline->unitpriceinclvat    = $cartTotal - $bamboraTotal;
+			$roundingOrderline->unitpricevatamount  = 0;
+			$roundingOrderline->quantity            = 1;
+			$roundingOrderline->description         = $this->l('Rounding adjustment');
+			$roundingOrderline->linenumber          = $lineNumber++;
+			$roundingOrderline->unit                = $this->l('pcs.');
+			$roundingOrderline->vat                 = 0.0;
+			return $roundingOrderline;
+		}
+
+	}
 
     /**
      * Create Bambora Url
