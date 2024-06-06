@@ -23,7 +23,7 @@
         var checkoutToken = "{$bamboraCheckoutToken|escape:'htmlall':'UTF-8'}";
         var windowState = "{$bamboraWindowState|escape:'htmlall':'UTF-8'}";
 
-        if (windowState === 1) {
+        if (windowState == 1) {
             new Bambora.RedirectCheckout(checkoutToken);
         } else {
             var checkout = new Bambora.ModalCheckout(null);

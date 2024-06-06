@@ -26,7 +26,7 @@
         }
 
         function openBamboraCheckout() {
-            if (windowState === 1) {
+            if (windowState == 1) {
                 new Bambora.RedirectCheckout(checkoutToken);
             } else {
                 checkout.show();
