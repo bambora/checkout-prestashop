@@ -17,7 +17,7 @@
         var checkoutToken = "{$bamboraCheckoutToken|escape:'htmlall':'UTF-8'}";
         var windowState = "{$bamboraWindowState|escape:'htmlall':'UTF-8'}";
 
-        if (windowState !== 1) {
+        if (windowState !== "1") {
             var checkout = new Bambora.ModalCheckout(null);
             checkout.on(Bambora.Event.Close, function (payload) {
                 window.location.href = payload.acceptUrl;
@@ -26,7 +26,7 @@
         }
 
         function openBamboraCheckout() {
-            if (windowState == 1) {
+            if (windowState === "1") {
                 new Bambora.RedirectCheckout(checkoutToken);
             } else {
                 checkout.show();
