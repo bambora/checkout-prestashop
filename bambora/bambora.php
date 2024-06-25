@@ -26,7 +26,7 @@ if (!defined('_PS_VERSION_')) {
 
 class Bambora extends PaymentModule
 {
-    const MODULE_VERSION = '2.2.0';
+    const MODULE_VERSION = '2.3.0';
     const V15 = '15';
     const V16 = '16';
     const V17 = '17';
