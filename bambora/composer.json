@@ -3,7 +3,7 @@
   "description": "PrestaShop payment module for Worldline Checkout",
   "homepage": "https://worldline.com/sv-se/home/main-navigation/solutions/merchants/solutions-and-services/online",
   "license": "OSL-3.0",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "authors": [
     {
       "name": "Worldline",

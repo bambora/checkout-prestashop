@@ -36,7 +36,7 @@ class Bambora extends PaymentModule
     {
         $this->name = 'bambora';
         $this->tab = 'payments_gateways';
-        $this->version = '2.2.0';
+        $this->version = '2.3.0';
         $this->author = 'Bambora Online A/S';
 
         $this->ps_versions_compliancy = array(
