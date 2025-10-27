@@ -1,21 +1,21 @@
 {
-  "name": "bambora/module-payment-prestashop",
-  "description": "PrestaShop payment module for Worldline Checkout",
-  "homepage": "https://worldline.com/sv-se/home/main-navigation/solutions/merchants/solutions-and-services/online",
-  "license": "OSL-3.0",
-  "version": "2.3.0",
-  "authors": [
-    {
-      "name": "Worldline",
-      "email": "support-nordics@worldline.com"
-    }
-  ],
-  "require": {
-    "php": ">=5.6.0",
-    "ext-json": "*"
-  },
-  "config": {
-    "preferred-install": "dist"
-  },
-  "type": "prestashop-module"
+    "name": "bambora/module-payment-prestashop",
+    "description": "PrestaShop payment module for Worldline Online Checkout",
+    "homepage": "https://worldline.com/sv-se/home/main-navigation/solutions/merchants/solutions-and-services/online",
+    "license": "OSL-3.0",
+    "version": "3.0.0",
+    "authors": [
+        {
+            "name": "Worldline",
+            "email": "support-nordics@worldline.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "ext-json": "*"
+    },
+    "config": {
+        "preferred-install": "dist"
+    },
+    "type": "prestashop-module"
 }

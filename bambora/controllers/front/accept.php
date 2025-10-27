@@ -1,20 +1,6 @@
 <?php
-/**
- * Copyright (c) 2019. All rights reserved Bambora Online A/S.
- *
- * This program is free software. You are allowed to use the software but NOT allowed to modify the software.
- * It is also not legal to do any changes to the software and distribute it in your own name / brand.
- *
- * All use of the payment modules happens at your own risk. We offer a free test account that you can use to test the module.
- *
- * @author    Bambora Online A/S
- * @copyright Bambora (https://bambora.com)
- * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
- *
- */
 
-include('baseaction.php');
-
+include 'baseAction.php';
 class BamboraAcceptModuleFrontController extends BaseAction
 {
     /**
@@ -22,31 +8,28 @@ class BamboraAcceptModuleFrontController extends BaseAction
      */
     public function postProcess()
     {
-        $message = "";
+        $message = '';
         $responseCode = '400';
         $cart = null;
         if ($this->validateAction($message, $cart)) {
             /* Wait for callback */
-            for ($i = 0; $i < 10; $i++) {
-                if ($cart->orderExists()) {
+            for ($i = 0; $i < 10; ++$i) {
+                if (isset($cart) && $cart->orderExists()) {
                     $this->redirectToAccept($cart);
+
                     return;
                 }
                 sleep(1);
             }
-            $message = $this->processAction(false, $cart, $responseCode);
+            $this->processAction(false, $cart, 'accept', $responseCode);
             $this->redirectToAccept($cart);
         } else {
-            $message = empty($message) ? $this->l("Unknown error") : $message;
-            $this->createLogMessage($message, 3, $cart);
+            $message = empty($message) ? $this->l('Unknown error', 'accept') : $message;
+            $this->createErrorLogMessage($message, 3, $cart);
             Context::getContext()->smarty->assign('paymenterror', $message);
-            if ($this->module->getPsVersion() === Bambora::V17) {
-                $this->setTemplate(
-                    'module:bambora/views/templates/front/paymenterror17.tpl'
-                );
-            } else {
-                $this->setTemplate('paymenterror.tpl');
-            }
+            $this->setTemplate(
+                'module:bambora/views/templates/front/payment-error.tpl'
+            );
         }
     }
 
@@ -57,10 +40,8 @@ class BamboraAcceptModuleFrontController extends BaseAction
      */
     private function redirectToAccept($cart)
     {
-        Tools::redirectLink(
-            __PS_BASE_URI__ . 'order-confirmation.php?key=' . $cart->secure_key . '&id_cart=' . (int)$cart->id . '&id_module=' . (int)$this->module->id . '&id_order=' . (int)Order::getIdByCartId(
-                $cart->id
-            )
-        );
+        $order_id = Order::getIdByCartId($cart->id);
+        $url = "order-confirmation.php?key={$cart->secure_key}&id_cart={$cart->id}&id_module={$this->module->id}&id_order={$order_id}";
+        Tools::redirect($url);
     }
 }

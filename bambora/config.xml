@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module>
+    <name>bambora</name>
+    <displayName><![CDATA[Worldline Online Checkout]]></displayName>
+    <version><![CDATA[3.0.0]]></version>
+    <description><![CDATA[Accept online payments quick and secure by Worldline Online Checkout]]></description>
+    <author><![CDATA[Bambora Online A/S]]></author>
+    <tab><![CDATA[payments_gateways]]></tab>
+    <is_configurable>1</is_configurable>
+    <need_instance>1</need_instance>
+</module>
