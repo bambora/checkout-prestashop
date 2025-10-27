@@ -1,0 +1,418 @@
+.bambora-table {
+    width: 100%;
+}
+
+.bambora-table th {
+    font-weight: bold;
+    padding: 5px;
+    text-align: left;
+}
+
+.bambora-table td {
+    white-space: nowrap;
+    padding: 5px;
+    border-bottom: solid 1px #eee;
+    text-align: left;
+}
+.bambora-operations-table {
+    margin-top: 20px;
+}
+.bambora-operations-table th {
+    background: #fff
+}
+
+.bambora-pr-overview-table {
+    background-color: #fff !important;
+}
+
+.bambora-operations-table tr:nth-child(even),
+.bambora-pr-overview-table tr:nth-child(even) {
+    background: #f4f8fb
+}
+
+.bambora-table-title {
+    font-weight: 700;
+    border-bottom: 1pt solid #d3d8db !important;
+    padding-left: 0px !important;
+}
+
+.bambora-pr-create-form-table tr td:nth-child(odd) {
+    width: 25%;
+}
+
+.bambora-action-info-text {
+    padding-left:3px;
+}
+
+.bambora-logo {
+    width: 100%;
+    max-width: 300px;
+}
+
+.bambora-buttons {
+    background-color: #FCFDFE;
+    border: 1px solid #e1ebf5;
+    -ms-border-radius: 4px;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+.bambora-show {
+    -ms-opacity: 1;
+    opacity: 1;
+    display: inline-flex;
+    -webkit-transition: 1000ms cubic-bezier(0, 0, 0.58, 1);
+    -ms-transition: 1000ms cubic-bezier(0, 0, 0.58, 1);
+    -o-transition: 1000ms cubic-bezier(0, 0, 0.58, 1);
+    transition: 1000ms cubic-bezier(0, 0, 0.58, 1);
+}
+
+.bambora-hidden {
+    -ms-opacity: 0;
+    opacity: 0;
+    display: none !important;
+}
+
+#bambora-capture {
+    -webkit-transition: all 1.0s ease;
+    -moz-transition: all 1.0s ease;
+    -o-transition: all 1.0s ease;
+    -ms-transition: all 1.0s ease;
+    transition: all 1.0s ease;
+}
+
+#bambora-confirmAction {
+    -webkit-transition: all 1.0s ease;
+    -moz-transition: all 1.0s ease;
+    -o-transition: all 1.0s ease;
+    -ms-transition: all 1.0s ease;
+    transition: all 1.0s ease;
+}
+
+#bambora-acceptbtn {
+    -webkit-transition: all 1.0s ease;
+    -moz-transition: all 1.0s ease;
+    -o-transition: all 1.0s ease;
+    transition: all 1.0s ease;
+}
+
+.bambora-button-frame {
+    vertical-align: top;
+    white-space: nowrap;
+    -ms-border-radius: 3px;
+    border-radius: 3px;
+    margin-left: 0 !important;
+
+}
+
+.bambora-button-control {
+    margin-left: 0px !important;
+    align-items: center;
+}
+
+.bambora-action-control {
+    display: inline-flex;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.bambora-action-control span {
+    margin-right: 5px;
+    margin-left: 5px;
+}
+
+.bambora-normalSize {
+    padding-right: 10px;
+}
+
+.bambora-action-input {
+    width: 90px;
+    text-align: right;
+}
+
+.worldline-info {
+    padding-top: 10px;
+    color: #45beaa;
+    font-style: italic;
+}
+
+.bambora-capture-btn {
+    min-width: 100px !important;
+    background-color: #45beaa !important;
+    color: #FCFDFE !important;
+    white-space: nowrap !important;
+    margin-right: 10px !important;
+}
+
+.badge-success {
+    background-color: #45beaa;
+}
+
+.bambora-credit-btn {
+    background-color: #ffeb78 !important;
+    color: #000000 !important;
+    min-width: 100px !important;
+    white-space: nowrap !important;
+}
+
+.bambora-delete-btn {
+    background-color: #f08791 !important;
+    color: #FCFDFE !important;
+    min-width: 100px !important;
+    white-space: nowrap !important;
+    margin-left: 0px !important; 
+}
+
+.helpContainer h5 {
+    font-weight: bold;
+}
+
+#bambora-spinner {
+    display: inline-flex;
+    align-items: center;
+}
+
+#bambora-spinner div{
+    background-color: silver;
+    -ms-border-radius: 30px;
+    border-radius: 30px;
+    padding: 8px;
+    width: 30px;
+    height: 30px;
+    line-height: 0px;
+}
+
+#bambora-spinner div img {
+    width: 100%;
+    height: 100%;
+    -moz-animation-name: rotate;
+    -o-animation-name: rotate;
+    -webkit-animation-name: rotate;
+    animation-name: rotate;
+    -moz-animation-duration: 2s;
+    -o-animation-duration: 2s;
+    -webkit-animation-duration: 2s;
+    animation-duration: 2s;
+    -moz-animation-iteration-count: infinite;
+    -o-animation-iteration-count: infinite;
+    -webkit-animation-iteration-count: infinite;
+    animation-iteration-count: infinite;
+    -moz-animation-timing-function: linear;
+    -o-animation-timing-function: linear;
+    -webkit-animation-timing-function: linear;
+    animation-timing-function: linear;
+}
+
+#bambora-spinner span {
+    margin-left: 5px;
+}
+
+.bambora-cancel-btn {
+    background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAYAAADEtGw7AAAAAXNSR0IArs4c6QAAAfJJREFUOBGVlT1LA0EQhnfvjEGJiIJgZW8nKH5ErYR0FqksIgiW10gUjf4BSRTTKhZik0KstRGtjMZUNhaaXxFFIkhY5z0yx5rsXTYLx87Ozjw3O7MfQmgtt5Wb0IY9iZ7nJbLZ7Cg7OSzs7RxsiJhb293eX2OdbQ9oYnD4NuYO3DNcwhlQKeUFiY5Sqklf5riYv7IBM1QKuQx7JcTrb7Ox4mL50nXuSNeHCfoBVpFOLiy9Pz0/vkEX1tqhsKNIx10ZG3PLL+V6cn6xRrp0C2oFN0EBVkpU5Vdz3cUAkSFCEq3gXaCpwnmh7oN7gdtAwfOLB4EbdgWlpERf8FMu6PfP5w2qz4Vin9by/UhZ1wHGRBickv9BDpPsjN4Ehd4IxoQJDr3ewqCwCZarO0A2FVS3iYLCLjh5uhPLyCmWz2PuKefKUeIU1Wddex8asVb96XYnKqxUQq1GHSIjWIP6x5TBiBRQjKmLPKEdqQiHiqqj5Caxm/wjgrv0lUwX1z9wFJSOaSpfPLwkcMYGHqSiG5QLZdotprT4YFsop8AGLnuFMhy96RAhTUiXE4/H+6nGQ7pDt83PtngM2nNOcw7tmxF/6+A5wbNCgylbKMPRc+SA0u3hHZ3kz/wcVyqVxuzczDVuflzSXCjdOUrmnFOkD4DC9g/n0U/UBn+1FgAAAABJRU5ErkJggg==") no-repeat scroll center center / 11px 11px;
+}
+
+.bambora-overlay-data {
+    width: 500px;
+    height: 100% !important;
+}
+
+#bambora-overlay-message-container {
+    max-width: 86%;
+}
+
+#bambora-overlay-message-title,
+#bambora-overlay-message-title-with-message {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+#bambora-inline,
+#bambora-overlay {
+    display: none;
+}
+
+.bambora-checkmark,
+.bambora-exclamation {
+    display: inline-block;
+    width: 45px;
+}
+
+.bambora-checkmark,
+.bambora-exclamation,
+#overlay-message-title {
+    position: absolute;
+    top: 50%;
+    -moz-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    -o-transform: translateY(-50%);
+    -webkit-transform: translateY(-50%);
+    transform: translateY(-50%);
+}
+
+#bambora-message {
+    display: inline-flex;
+    align-items: center;
+}
+
+.bambora-circle {
+    width: 40px;
+    height: 40px;
+    -ms-border-radius: 21px;
+    border-radius: 21px;
+    margin-right: 10px;
+}
+
+.bambora-checkmark-circle {
+    background-color: #45beaa;
+}
+
+.bambora-exclamation-circle {
+    background-color: #ffeb78;
+}
+
+.bambora-checkmark-stem {
+    position: relative;
+    left: 15px;
+    top: 8px;
+    width: 9px;
+    height: 20px;
+    border: solid #fff;
+    border-width: 0 4px 4px 0;
+    -moz-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+.bambora-exclamation-stem {
+    position: relative;
+    width: 5px;
+    height: 17px;
+    background-color: #fff;
+    left: 18px;
+    top: 8px;
+    -ms-border-radius: 25px;
+    -webkit-border-radius: 25px;
+    -moz-border-radius: 25px;
+    border-radius: 25px;
+}
+
+.bambora-exclamation-dot {
+    position: relative;
+    width: 5px;
+    height: 5px;
+    background-color: #fff;
+    left: 18px;
+    top: 11px;
+    -moz-border-radius: 25px;
+    -webkit-border-radius: 25px;
+    -ms-border-radius: 25px;
+    border-radius: 25px;
+}
+
+#bambora-transaction-controls-container {
+    display:flex;
+    margin-top: 10px;
+}
+
+#bambora-format-error {
+    display: none;
+}
+
+
+
+.bambora-transaction-paymenttype {
+    display: flex;
+    align-items: center;
+}
+
+.bambora-transaction-paymenttype-logoes img{
+    max-width: 34px;
+    margin-left: 10px;
+}
+
+.bambora-card-body {
+    overflow-x: scroll;
+}
+
+/* PaymentRequest */
+.bambora-pr-create-form-description,
+.bambora-pr-create-form-info {
+    padding-left: 5px;
+    padding-bottom: 5px;
+}
+
+.bambora-pr-create-form-info {
+    font-style: italic;
+}
+
+.bambora-pr-create-form-label {
+    font-weight: 600;
+    padding-top: 5px;
+}
+
+.bambora-pr-create-form-button {
+    margin-left: 5px;
+}
+
+.bambora-pr-send-form {
+    margin-top: 30px;
+    padding: 5px;
+}
+
+.bambora-pr-info-form-delete-button,
+.bambora-pr-send-form-submit-button {
+    margin-top: 5px;
+}
+
+.bambora-pr-send-form-title {
+    font-weight: 700;
+    border-bottom: 1pt solid #d3d8db !important;
+}
+
+.bambora-pr-send-form-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 320px;
+}
+
+.bambora-pr-send-form-container label {
+    padding-top: 5px;
+    margin: 0;
+}
+
+.bambora-pr-send-form-container textarea {
+    padding: 3px;
+}
+
+
+.bambora-settings-help-text h4  {
+    font-weight: 700;
+    font-size: 14px;
+}
+
+@-webkit-keyframes rotate {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+
+    to {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes rotate {
+    from {
+        -webkit-transform: rotate(0deg);
+        -ms-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+
+    to {
+        -webkit-transform: rotate(360deg);
+        -ms-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}

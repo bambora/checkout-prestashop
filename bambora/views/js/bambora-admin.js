@@ -1,17 +1,3 @@
-/**
- * Copyright (c) 2019. All rights reserved Bambora Online A/S.
- *
- * This program is free software. You are allowed to use the software but NOT allowed to modify the software.
- * It is also not legal to do any changes to the software and distribute it in your own name / brand.
- *
- * All use of the payment modules happens at your own risk. We offer a free test account that you can use to test the module.
- *
- * @author    Bambora Online A/S
- * @copyright Bambora (https://bambora.com)
- * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
- *
- */
-
 $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
 
@@ -28,7 +14,7 @@ $(document).ready(function () {
             "hideOnContentClick": false,
             "hideOnOverlayClick": false,
             "helpers": {
-                "overlay": {"closeClick": true}
+                "overlay": { "closeClick": true }
             }
         });
 
@@ -45,20 +31,27 @@ $(document).ready(function () {
 
     function createTransactionControl(control) {
         $("#bambora-spinner").hide();
-        var firstDivChild = control.children("div:first");
-        var firstButton = firstDivChild.children("div:first").children("input:first");
-        var postButton = firstDivChild.children("div:last").children("div:last").children("input:first");
-        var firstInnermostDiv = firstDivChild.children("div:first");
-        var secondInnermostDiv = firstDivChild.children("div:last");
-        var cancelButton = secondInnermostDiv.children("div:first").children("a:first");
-        var inputField = secondInnermostDiv.children("div").eq(1).children("input:first");
+        var firstButton = control.children(".bambora-action-btn");
+        var innerDiv = control.children("div:last");
+        var cancelButton = innerDiv.children(".bambora-cancel-btn");
+        var inputField = innerDiv.children(".bambora-action-input");
+        var postButton = innerDiv.children(".bambora-action-submit");
 
         firstButton.click(function () {
-            firstInnermostDiv.css("display", "none").removeClass("bambora-show");
-            firstInnermostDiv.addClass("bambora-hidden");
-            secondInnermostDiv.css("display", "inline-block").removeClass("bambora-hidden");
-            secondInnermostDiv.addClass("bambora-show");
+            firstButton.removeClass("bambora-show");
+            firstButton.addClass("bambora-hidden");
+            innerDiv.removeClass("bambora-hidden");
+            innerDiv.addClass("bambora-show");
             hideAllButtonsExceptMe(control);
+            return false;
+        });
+
+        cancelButton.click(function () {
+            innerDiv.removeClass("bambora-show");
+            innerDiv.addClass("bambora-hidden");
+            firstButton.removeClass("bambora-hidden");
+            firstButton.addClass("bambora-show");
+            showAllButtons();
             return false;
         });
 
@@ -69,21 +62,13 @@ $(document).ready(function () {
                 return false;
             }
 
-            firstDivChild.hide();
             hideAllButtons();
             $("#bambora-spinner").show();
 
             return true;
         });
 
-        cancelButton.click(function () {
-            secondInnermostDiv.css("display", "none").removeClass("bambora-show");
-            secondInnermostDiv.addClass("bambora-hidden");
-            firstInnermostDiv.css("display", "inline-block").removeClass("bambora-hidden");
-            firstInnermostDiv.addClass("bambora-show");
-            showAllButtons();
-            return false;
-        });
+
 
         inputField.keydown(function (e) {
             var digit = String.fromCharCode(e.which || e.keyCode);
@@ -92,7 +77,6 @@ $(document).ready(function () {
                 var reg = new RegExp(/^(?:\d+(?:,\d{0,3})*(?:\.\d{0,2})?|\d+(?:\.\d{0,3})*(?:,\d{0,2})?)$/);
                 if (reg.test(digit)) {
                     console.log(e);
-
                 } else {
                     return false;
                 }
@@ -124,7 +108,7 @@ $(document).ready(function () {
 
     $("#bambora-transaction-controls-container").bamboraTransactionControls();
 
-    $("#bambora-action-input")
+    $(".bambora-action-input")
         .focus(function () {
             if ($("#bambora-format-error").css("display") !== "none") {
                 $("#bambora-format-error").toggle();

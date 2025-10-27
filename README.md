@@ -1,10 +1,9 @@
-Worldline Checkout for Prestashop
+Worldline Online Checkout for Prestashop
 ========================
 
-Previously known as Bambora Checkout
+Previously known as Bambora Online Checkout
 
-Supported versions of Prestashop: 1.5.x , 1.6.x, 1.7.x and 8.0.x
+Supports PrestaShop versions 8.2.x and 9.x
+Supports PHP versions >= 8.1
 
 Documentation: https://developer.bambora.com/europe/shopping-carts/shopping-carts/prestashop
-
-

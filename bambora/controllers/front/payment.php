@@ -1,30 +1,26 @@
 <?php
-/**
- * Copyright (c) 2019. All rights reserved Bambora Online A/S.
- *
- * This program is free software. You are allowed to use the software but NOT allowed to modify the software.
- * It is also not legal to do any changes to the software and distribute it in your own name / brand.
- *
- * All use of the payment modules happens at your own risk. We offer a free test account that you can use to test the module.
- *
- * @author    Bambora Online A/S
- * @copyright Bambora (https://bambora.com)
- * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
- *
- */
 
 class BamboraPaymentModuleFrontController extends ModuleFrontController
 {
+    /** @var Bambora */
+    private $bamboraModule;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->bamboraModule = $this->module;
+    }
+
     /**
      * @see FrontController::postProcess()
      */
     public function postProcess()
     {
         $cart = $this->context->cart;
-        if ($cart->id_customer == 0 ||
-            $cart->id_address_delivery == 0 ||
-            $cart->id_address_invoice == 0 ||
-            !$this->module->active) {
+        if ($cart->id_customer == 0
+            || $cart->id_address_delivery == 0
+            || $cart->id_address_invoice == 0
+            || !$this->module->active) {
             Tools::redirect('index.php?controller=order&step=1');
         }
 
@@ -37,33 +33,33 @@ class BamboraPaymentModuleFrontController extends ModuleFrontController
         }
 
         if (!$authorized) {
-            die(
-            $this->module->l(
-                'This payment method is not available.',
-                'bambora'
-            )
+            exit(
+                $this->module->l(
+                    'This payment method is not available.',
+                    'payment'
+                )
             );
         }
 
-        //create checkout request
-        $bamboraCheckoutRequest = $this->module->createCheckoutRequest($cart);
-        $checkoutResponse = $this->module->getBamboraCheckoutSession(
+        // create checkout request
+        $bamboraCheckoutRequest = BamboraCheckoutHelper::createCheckoutRequest($this->bamboraModule, $cart);
+        $checkoutResponse = BamboraApiHelper::getCheckoutResponse(
             $bamboraCheckoutRequest
         );
-        if (!isset($checkoutResponse) || $checkoutResponse['meta']['result'] == false) {
-            //add error message
+        if (!isset($checkoutResponse) || !$checkoutResponse->meta->result) {
+            // add error message
             Tools::redirect('index.php?controller=order&step=1');
         }
 
-        $paymentData = array(
+        $paymentData = [
             'bamboraWindowState' => Configuration::get('BAMBORA_WINDOWSTATE'),
-            'bamboraCheckoutToken' => $checkoutResponse['token']
-        );
+            'bamboraCheckoutToken' => $checkoutResponse->token,
+        ];
 
         $this->context->smarty->assign($paymentData);
 
         $this->setTemplate(
-            'module:bambora/views/templates/front/bamboracheckout17.tpl'
+            'module:bambora/views/templates/front/bambora-checkout.tpl'
         );
     }
 }
