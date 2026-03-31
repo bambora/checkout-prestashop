@@ -1,15 +1,15 @@
 <?php
 
-include 'helpers/adminCommonHelper.php';
-include 'helpers/adminPaymentRequestHelper.php';
-include 'helpers/adminTransactionHelper.php';
-include 'helpers/apiHelper.php';
-include 'helpers/commonHelper.php';
-include 'helpers/checkoutHelper.php';
-include 'helpers/currencyHelper.php';
-include 'helpers/dbHelper.php';
-include 'helpers/settingsHelper.php';
-include 'models/models.php';
+include __DIR__ . '/helpers/adminCommonHelper.php';
+include __DIR__ . '/helpers/adminPaymentRequestHelper.php';
+include __DIR__ . '/helpers/adminTransactionHelper.php';
+include __DIR__ . '/helpers/apiHelper.php';
+include __DIR__ . '/helpers/commonHelper.php';
+include __DIR__ . '/helpers/checkoutHelper.php';
+include __DIR__ . '/helpers/currencyHelper.php';
+include __DIR__ . '/helpers/dbHelper.php';
+include __DIR__ . '/helpers/settingsHelper.php';
+include __DIR__ . '/models/models.php';
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -19,7 +19,7 @@ class Bambora extends PaymentModule
     /**
      * @var string
      */
-    public const MODULE_VERSION = '3.0.0';
+    public const MODULE_VERSION = '3.0.1';
 
     /** @var Context */
     public $bamboraContext;
@@ -373,15 +373,40 @@ class Bambora extends PaymentModule
      */
     public function hookDisplayBackOfficeHeader($params)
     {
-        if ($this->context->controller != null) {
-            $cssPath = "{$this->_path}views/css/bambora-admin.css";
-            $this->context->controller->addCSS(
+        if ($this->context->controller == null) {
+            return '';
+        }
+
+        $cssPath = "{$this->_path}views/css/bambora-admin.css";
+        $jsPath = "{$this->_path}views/js/bambora-admin.js";
+
+        // PS9+ uses registerStylesheet
+        if (method_exists($this->context->controller, 'registerStylesheet')) {
+            $this->context->controller->registerStylesheet(
+                'bambora-admin-css',
                 $cssPath,
-                'all'
+                [
+                    'media' => 'all',
+                ]
             );
-            $jsPath = "{$this->_path}views/js/bambora-admin.js";
+        } else {
+            $this->context->controller->addCSS($cssPath, 'all');
+        }
+        // PS9+ uses registerJavascript
+        if (method_exists($this->context->controller, 'registerJavascript')) {
+            $this->context->controller->registerJavascript(
+                'bambora-admin-js',
+                $jsPath,
+                [
+                    'position' => 'head',
+                    'server' => 'remote',
+                ]
+            );
+        } else {
             $this->context->controller->addJS($jsPath);
         }
+
+        return '';
     }
 
     /**

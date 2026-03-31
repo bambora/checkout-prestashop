@@ -1,6 +1,6 @@
 <?php
 
-include 'baseAction.php';
+include __DIR__ . '/baseaction.php';
 class BamboraPaymentRequestCallbackModuleFrontController extends BaseAction
 {
     /**

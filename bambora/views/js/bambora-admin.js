@@ -57,7 +57,7 @@ $(document).ready(function () {
 
         postButton.click(function () {
             var reg = new RegExp(/^(?:[\d]+([,.]?[\d]{0,3}))$/);
-            if (inputField.length > 0 && inputField.name() !== "bambora-delete" && !reg.test(inputField.val())) {
+            if (inputField.length > 0 && inputField.name !== "bambora-delete" && !reg.test(inputField.val())) {
                 $("#bambora-format-error").toggle();
                 return false;
             }
@@ -89,6 +89,7 @@ $(document).ready(function () {
             //hiding all buttons in the container
             $("#bambora-transaction-controls-container").children("div").eq(item).hide();
         });
+        $(".bambora-action-info-text").hide();
     }
 
     function hideAllButtonsExceptMe(me) {
@@ -103,6 +104,7 @@ $(document).ready(function () {
             //showing all buttons in the container
             $("#bambora-transaction-controls-container").children("div").eq(item).show();
         });
+        $(".bambora-action-info-text").show();
         $("#bambora-spinner").hide();
     }
 

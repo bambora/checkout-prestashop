@@ -12,11 +12,17 @@ class BamboraAdminCommonHelper
     public static function processRemoteAction($module)
     {
         $bamboraUiMessage = null;
+
+        // Validate post-key only for PS9+
+        $isValidPostKey = version_compare(_PS_VERSION_, '9.0.0', '>=')
+            ? (Tools::getIsset('bambora-post-key')
+                && Tools::getValue('bambora-post-key') == $_SESSION['bambora-post-key'])
+            : true;
+
         if ((Tools::isSubmit('bambora-capture')
             || Tools::isSubmit('bambora-credit')
             || Tools::isSubmit('bambora-delete'))
-            && Tools::getIsset('bambora-post-key')
-            && Tools::getValue('bambora-post-key') == $_SESSION['bambora-post-key']
+            && $isValidPostKey
             && Tools::getIsset('bambora-transaction-id')
             && Tools::getIsset('bambora-currency-code')
         ) {
