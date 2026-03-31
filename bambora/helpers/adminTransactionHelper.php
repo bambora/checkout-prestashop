@@ -271,15 +271,20 @@ class BamboraAdminTransactionHelper
         if ($transaction->available->capture > 0
                 || $transaction->available->credit > 0
                 || $transaction->candelete == 'true') {
-            $randomKey = rand();
-            $_SESSION['bambora-post-key'] = $randomKey;
             $html .= '<form name="bambora-remote" action="' . $_SERVER['REQUEST_URI'] .
                         '" method="post" class="bambora-display-inline" id="bambora-action" >
                             <input type="hidden" name="bambora-transaction-id" value="' . $transaction->id . '" />
                             <input type="hidden" name="bambora-order-id" value="' . $transaction->orderid . '" />
-                            <input type="hidden" name="bambora-currency-code" value="' . $transaction->currency->code . '" />
-                            <input type="hidden" value="' . $randomKey . '" name="bambora-post-key" />
-                            <div id="bambora-transaction-controls-container">';
+                            <input type="hidden" name="bambora-currency-code" value="' . $transaction->currency->code . '" />';
+
+            // Only use post-key for PS9+
+            if (version_compare(_PS_VERSION_, '9.0.0', '>=')) {
+                $randomKey = rand();
+                $_SESSION['bambora-post-key'] = $randomKey;
+                $html .= '<input type="hidden" value="' . $randomKey . '" name="bambora-post-key" />';
+            }
+
+            $html .= '<div id="bambora-transaction-controls-container">';
             $html .= self::buildCardTransactionFormSpinnerHtml($module);
 
             $minorUnits = $transaction->currency->minorunits;
